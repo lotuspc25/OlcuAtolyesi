@@ -1,0 +1,1411 @@
+﻿<Window x:Class="OlcuAtolyesi.PC.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:OlcuAtolyesi.PC.ViewModels"
+        xmlns:ctl="clr-namespace:OlcuAtolyesi.PC.Controls"
+        Title="Ölçü Atölyesi PC — v0.5.0.5"
+        Icon="pack://application:,,,/OlcuAtolyesi.PC;component/Resources/app.ico"
+        Width="1180"
+        Height="760"
+        MinWidth="920"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        FontFamily="Segoe UI"
+        PreviewKeyDown="OnPreviewKeyDown">
+
+    <Window.InputBindings>
+        <KeyBinding Key="F2" Command="{Binding OpenMeasurementWindowCommand}" />
+        <KeyBinding Key="L" Command="{Binding ToggleMagnifierCommand}" />
+        <KeyBinding Key="D2" Command="{Binding MagnifierZoom2Command}" />
+        <KeyBinding Key="D4" Command="{Binding MagnifierZoom4Command}" />
+        <KeyBinding Key="D8" Command="{Binding MagnifierZoom8Command}" />
+        <KeyBinding Key="Add" Command="{Binding MagnifierZoomInCommand}" />
+        <KeyBinding Key="OemPlus" Command="{Binding MagnifierZoomInCommand}" />
+        <KeyBinding Key="Subtract" Command="{Binding MagnifierZoomOutCommand}" />
+        <KeyBinding Key="OemMinus" Command="{Binding MagnifierZoomOutCommand}" />
+    </Window.InputBindings>
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OlcuAtolyesi.PC;component/Themes/SharedStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
+        <!-- 1. Ana Panel (DashboardViewModel) Şablonu -->
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <StackPanel Margin="0,0,0,20">
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14" Background="{DynamicResource AccentSubtleBrush}">
+                    <StackPanel>
+                        <TextBlock Text="Ölçü Atölyesi PC — Masaüstü Çalışma Alanı (v0.5.0.5)"
+                                   FontSize="17" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
+                        <TextBlock Text="{Binding DetailedScope}"
+                                   Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" />
+                        <WrapPanel Margin="0,10,0,0">
+                            <Border Background="{DynamicResource SuccessBadgeBrush}" CornerRadius="5" Padding="10,4" Margin="0,0,8,4">
+                                <TextBlock Foreground="{DynamicResource SuccessTextBrush}" FontWeight="SemiBold"
+                                           Text="{Binding ActiveModuleCount, StringFormat='Etkin Modül: {0}'}" />
+                            </Border>
+                            <Border Background="{DynamicResource WarningBadgeBrush}" CornerRadius="5" Padding="10,4" Margin="0,0,8,4">
+                                <TextBlock Foreground="{DynamicResource WarningTextBrush}" FontWeight="SemiBold"
+                                           Text="{Binding FoundationModuleCount, StringFormat='Temeli Hazır: {0}'}" />
+                            </Border>
+                            <Border Background="{DynamicResource PlannedBadgeBrush}" CornerRadius="5" Padding="10,4" Margin="0,0,8,4">
+                                <TextBlock Foreground="{DynamicResource PlannedTextBrush}" FontWeight="SemiBold"
+                                           Text="{Binding PlannedModuleCount, StringFormat='Planlanan Modül: {0}'}" />
+                            </Border>
+                            <Border Background="{DynamicResource CardBackgroundBrush}" CornerRadius="5" Padding="10,4" Margin="0,0,8,4">
+                                <TextBlock Foreground="{DynamicResource SecondaryTextBrush}"
+                                           Text="{Binding OpenSourceCount, StringFormat='Açık Kaynak Entegrasyon Adayı: {0}'}" />
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Modül Durumları ve Hızlı Geçiş" FontSize="15" FontWeight="SemiBold" Margin="0,4,0,10" />
+
+                <ItemsControl ItemsSource="{Binding ModuleCards}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="2" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:DashboardModuleCardItem}">
+                            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,12,12">
+                                <DockPanel>
+                                    <DockPanel DockPanel.Dock="Top">
+                                        <Border DockPanel.Dock="Right"
+                                                Background="{DynamicResource PlannedBadgeBrush}"
+                                                CornerRadius="4" Padding="8,3" VerticalAlignment="Top">
+                                            <TextBlock Text="{Binding StateBadge}" FontSize="11" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PlannedTextBrush}" />
+                                        </Border>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding IconGlyph}" FontSize="16" Margin="0,0,8,0"
+                                                       Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="Bold"
+                                                       Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DockPanel>
+
+                                    <Button DockPanel.Dock="Bottom"
+                                            Style="{StaticResource SecondaryButtonStyle}"
+                                            Command="{Binding OpenCommand}"
+                                            Content="Modülü Aç →"
+                                            HorizontalAlignment="Left"
+                                            Margin="0,12,0,0" />
+
+                                    <StackPanel Margin="0,8,0,0">
+                                        <TextBlock Text="{Binding ShortSummary}" TextWrapping="Wrap"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12.5" />
+                                        <TextBlock Text="{Binding TargetVersion, StringFormat='Hedef: {0}'}"
+                                                   Margin="0,6,0,0" FontSize="11.5"
+                                                   Foreground="{DynamicResource MutedTextBrush}" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- 2. Projeler (ProjectsViewModel) Şablonu — v0.3.0 Kalıcı Proje ve Mobil Uyumluluk -->
+        <DataTemplate DataType="{x:Type vm:ProjectsViewModel}">
+            <StackPanel Margin="0,0,0,20">
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" Background="{DynamicResource SuccessBadgeBrush}" CornerRadius="5" Padding="10,4">
+                                <TextBlock Text="{Binding ProjectCount, StringFormat='Kayıtlı Proje: {0}'}"
+                                           FontWeight="SemiBold" Foreground="{DynamicResource SuccessTextBrush}" />
+                            </Border>
+                            <TextBlock Text="{Binding ShortSummary}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding DetailedScope}" Margin="0,6,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SecondaryTextBrush}" />
+                        <TextBlock Text="{Binding StorageDirectoryText, StringFormat='Depolama Dizini: {0}'}"
+                                   Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" />
+                        <TextBlock Text="{Binding StatusMessage}" Margin="0,8,0,0" FontWeight="SemiBold"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource AccentBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Yeni Proje Oluşturma ve Mobil/PC Paket İçe Aktarma -->
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Yeni Proje Oluştur" FontSize="14" FontWeight="Bold" Margin="0,0,0,8" />
+                            <TextBlock Text="Proje Adı" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" />
+                            <TextBox Text="{Binding NewProjectNameInput, UpdateSourceTrigger=PropertyChanged}"
+                                     Padding="6,4" Margin="0,3,0,8" />
+                            <TextBlock Text="Açıklama (İsteğe Bağlı)" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" />
+                            <TextBox Text="{Binding NewProjectDescriptionInput, UpdateSourceTrigger=PropertyChanged}"
+                                     Padding="6,4" Margin="0,3,0,10" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding CreateProjectCommand}"
+                                    Content="Yeni Proje Oluştur"
+                                    HorizontalAlignment="Left" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Mobil (v0.4.0) / PC Proje Paketi İçe &amp; Dışa Aktar"
+                                       FontSize="14" FontWeight="Bold" Margin="0,0,0,8" />
+                            <TextBlock Text="Aynı Proje Kimliği Çakışma Politikası" FontSize="11.5"
+                                       Foreground="{DynamicResource MutedTextBrush}" />
+                            <ComboBox ItemsSource="{Binding ConflictChoices}"
+                                      SelectedValue="{Binding SelectedConflictPolicy}"
+                                      SelectedValuePath="Policy"
+                                      DisplayMemberPath="DisplayName"
+                                      Padding="6,4" Margin="0,3,0,10" />
+                            <WrapPanel>
+                                <Button Style="{StaticResource PrimaryButtonStyle}"
+                                        Command="{Binding ImportPackageCommand}"
+                                        Content="Proje Paketi İçe Aktar (.zip / project.json)"
+                                        Margin="0,0,8,6" />
+                                <Button Style="{StaticResource SecondaryButtonStyle}"
+                                        Command="{Binding ExportSelectedPackageCommand}"
+                                        Content="Seçili Projeyi Paket Olarak Dışa Aktar (.zip)"
+                                        Margin="0,0,8,6" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Seçili Proje Düzenleme ve İşlemler -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14"
+                        Visibility="{Binding HasSelectedProject, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Seçili Projeyi Düzenle / Yönet" FontSize="14" FontWeight="Bold" Margin="0,0,0,8" />
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="260" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Proje Adı" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" />
+                                <TextBox Text="{Binding RenameInput, UpdateSourceTrigger=PropertyChanged}"
+                                         Padding="6,4" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Proje Açıklaması" FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" />
+                                <TextBox Text="{Binding EditDescriptionInput, UpdateSourceTrigger=PropertyChanged}"
+                                         Padding="6,4" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </Grid>
+                        <WrapPanel>
+                            <Button Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding OpenSelectedCommand}"
+                                    Content="Fotoğraftan Ölçüm Ekranında Aç"
+                                    Margin="0,0,8,6" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding RenameSelectedCommand}"
+                                    Content="Adı ve Açıklamayı Güncelle"
+                                    Margin="0,0,8,6" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding ExportSelectedPackageCommand}"
+                                    Content="Taşınabilir Paket Dışa Aktar (.zip)"
+                                    Margin="0,0,8,6" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding DeleteSelectedCommand}"
+                                    Content="Seçili Projeyi Sil"
+                                    Margin="0,0,8,6" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Kayıtlı Projeler Listesi -->
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,10">
+                            <Button DockPanel.Dock="Right"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding RefreshCommand}"
+                                    Content="Listeyi Yenile"
+                                    Padding="8,4" />
+                            <TextBlock Text="Kaydedilmiş Projeler" FontSize="14.5" FontWeight="Bold" VerticalAlignment="Center" />
+                        </DockPanel>
+
+                        <ItemsControl ItemsSource="{Binding Projects}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:ProjectListItemViewModel}">
+                                    <Border Background="{DynamicResource CardAltBackgroundBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Center" Margin="12,0,0,0">
+                                                <Button Style="{StaticResource PrimaryButtonStyle}"
+                                                        Command="{Binding OpenInMeasurementCommand}"
+                                                        Content="Ölçümde Aç"
+                                                        Margin="0,0,6,0" />
+                                                <Button Style="{StaticResource SecondaryButtonStyle}"
+                                                        Command="{Binding SelectCommand}"
+                                                        Content="Seç / Düzenle"
+                                                        Margin="0,0,6,0" />
+                                                <Button Style="{StaticResource SecondaryButtonStyle}"
+                                                        Command="{Binding DeleteCommand}"
+                                                        Content="Sil" />
+                                            </WrapPanel>
+
+                                            <StackPanel>
+                                                <WrapPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14"
+                                                               Margin="0,0,10,0" VerticalAlignment="Center" />
+                                                    <Border Background="{DynamicResource PlannedBadgeBrush}"
+                                                            CornerRadius="4" Padding="7,2" Margin="0,0,8,0">
+                                                        <TextBlock Text="{Binding TypeBadge}" FontSize="11"
+                                                                   Foreground="{DynamicResource PlannedTextBrush}" />
+                                                    </Border>
+                                                    <Border Background="{DynamicResource AccentSubtleBrush}"
+                                                            CornerRadius="4" Padding="8,2">
+                                                        <TextBlock Text="{Binding ResultSummary}" FontSize="11.5" FontWeight="Bold"
+                                                                   Foreground="{DynamicResource AccentBrush}" />
+                                                    </Border>
+                                                </WrapPanel>
+
+                                                <TextBlock Text="{Binding Description}" Margin="0,4,0,2"
+                                                           TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                                <TextBlock Text="{Binding ReferenceSummary}" FontSize="11.5"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}" />
+                                                <TextBlock Text="{Binding CoordinatesSummary}" FontSize="11"
+                                                           Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0" />
+                                                <WrapPanel Margin="0,3,0,0">
+                                                    <TextBlock Text="{Binding PhotoStatusSummary}" FontSize="11"
+                                                               Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,14,0" />
+                                                    <TextBlock Text="{Binding UpdatedAtText}" FontSize="11"
+                                                               Foreground="{DynamicResource MutedTextBrush}" />
+                                                </WrapPanel>
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- 3. Telefon Bağlantısı (PhoneConnectionViewModel) Şablonu — v0.4.0 USB Cihaz Yönetimi -->
+        <DataTemplate DataType="{x:Type vm:PhoneConnectionViewModel}">
+            <StackPanel Margin="0,0,0,20">
+                <!-- Üst Durum ve ADB Bilgi Kartı -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" Background="{DynamicResource AccentSubtleBrush}" CornerRadius="5" Padding="10,4">
+                                <TextBlock Text="{Binding ConnectionSessionBadge}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource AccentBrush}" />
+                            </Border>
+                            <TextBlock Text="{Binding ShortSummary}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding DetailedScope}" Margin="0,6,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SecondaryTextBrush}" />
+                        <TextBlock Text="{Binding AdbStatusText}" Margin="0,8,0,0" FontSize="12"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource MutedTextBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- USB Cihaz Yönetim Araç Çubuğu ve Aktif Oturum Özeti -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="USB Cihaz Yönetimi ve Bağlantı Kontrolleri" FontSize="14.5" FontWeight="Bold" Margin="0,0,0,8" />
+
+                        <WrapPanel Margin="0,0,0,10">
+                            <Button Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding ScanDevicesCommand}"
+                                    Content="Cihazları Tara"
+                                    Margin="0,0,8,6" />
+                            <Button Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding SelectDeviceCommand}"
+                                    Content="Cihaz Seç"
+                                    Margin="0,0,8,6" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding CheckConnectionCommand}"
+                                    Content="Bağlantıyı Kontrol Et"
+                                    Margin="0,0,8,6" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding RefreshConnectionCommand}"
+                                    Content="Bağlantıyı Yenile"
+                                    Margin="0,0,8,6" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding DisconnectCommand}"
+                                    Content="Bağlantıyı Ayır"
+                                    Margin="0,0,8,6" />
+                        </WrapPanel>
+
+                        <TextBlock Text="{Binding StatusMessage}" FontWeight="SemiBold" FontSize="12.5"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource PrimaryTextBrush}" />
+                        <TextBlock Text="{Binding WarningOrErrorDetail}" Margin="0,4,0,0" FontSize="12"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource WarningTextBrush}" FontWeight="SemiBold"
+                                   Visibility="{Binding HasWarningOrError, Converter={StaticResource BoolToVis}}" />
+
+                        <!-- Seçili / Bağlı Cihaz Oturum Kartı -->
+                        <Border Background="{DynamicResource CardAltBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,10,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                                    <TextBlock Text="Seçili Cihaz Modeli" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                                    <TextBlock Text="{Binding ConnectedDeviceTitle}" FontWeight="Bold" FontSize="13" Margin="0,2,0,0" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="0,0,8,0">
+                                    <TextBlock Text="Cihaz Seri Numarası" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                                    <TextBlock Text="{Binding ConnectedDeviceSerial}" FontWeight="SemiBold" FontSize="12.5" Margin="0,2,0,0" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Margin="0,0,8,0">
+                                    <TextBlock Text="Android Sürümü" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                                    <TextBlock Text="{Binding ConnectedDeviceAndroidVersion}" FontWeight="SemiBold" FontSize="12.5" Margin="0,2,0,0" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="3">
+                                    <TextBlock Text="Oturum Durumu" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
+                                    <TextBlock Text="{Binding ConnectedDeviceStateText}" FontWeight="Bold" FontSize="12.5"
+                                               Foreground="{DynamicResource AccentBrush}" Margin="0,2,0,0" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Algılanan USB Android Cihazlar Listesi -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock DockPanel.Dock="Right"
+                                       Text="{Binding DeviceCount, StringFormat='Algılanan Cihaz: {0}'}"
+                                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}" />
+                            <TextBlock Text="Algılanan USB Android Cihazlar (adb devices -l)" FontSize="14.5" FontWeight="Bold" />
+                        </DockPanel>
+
+                        <ItemsControl ItemsSource="{Binding Devices}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:PhoneDeviceListItemViewModel}">
+                                    <Border Background="{DynamicResource CardAltBackgroundBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Right"
+                                                    Style="{StaticResource PrimaryButtonStyle}"
+                                                    Command="{Binding SelectCommand}"
+                                                    Content="{Binding SelectButtonText}"
+                                                    VerticalAlignment="Center"
+                                                    Margin="12,0,0,0" />
+                                            <StackPanel>
+                                                <WrapPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding DisplayTitle}" FontWeight="Bold" FontSize="14"
+                                                               Margin="0,0,10,0" VerticalAlignment="Center" />
+                                                    <Border Background="{DynamicResource PlannedBadgeBrush}"
+                                                            CornerRadius="4" Padding="8,2" Margin="0,0,8,0">
+                                                        <TextBlock Text="{Binding StateBadge}" FontSize="11" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource PlannedTextBrush}" />
+                                                    </Border>
+                                                    <Border Background="{DynamicResource AccentSubtleBrush}"
+                                                            CornerRadius="4" Padding="8,2">
+                                                        <TextBlock Text="{Binding AndroidVersionText}" FontSize="11" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource AccentBrush}" />
+                                                    </Border>
+                                                </WrapPanel>
+                                                <TextBlock Text="{Binding HardwareDetailsText}" FontSize="11.5"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,4,0,2" />
+                                                <TextBlock Text="{Binding GuidanceText}" FontSize="11.5" TextWrapping="Wrap"
+                                                           Foreground="{DynamicResource MutedTextBrush}" />
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Bağlantı Kanalları (USB Etkin, Wi-Fi ve Bluetooth Planlandı) -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="İletişim Kanalları Mimarisi (USB • Wi-Fi • Bluetooth)"
+                                   FontSize="14.5" FontWeight="Bold" Margin="0,0,0,8" />
+                        <ItemsControl ItemsSource="{Binding TransportOptions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource CardAltBackgroundBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <DockPanel>
+                                                <Border DockPanel.Dock="Right" Background="{DynamicResource PlannedBadgeBrush}"
+                                                        CornerRadius="4" Padding="8,2">
+                                                    <TextBlock Text="{Binding StatusBadge}" FontSize="11" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource PlannedTextBrush}" />
+                                                </Border>
+                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="13" />
+                                            </DockPanel>
+                                            <TextBlock Text="{Binding BandwidthAndRoleSummary}" Margin="0,4,0,0"
+                                                       TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Gelecekteki Kamera Kontrol Sözleşmeleri (IRemotePhoneCameraService) -->
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Gelecekteki Kamera Kontrol Mimarisi ve Yetenek Sorgu Sözleşmeleri (Planlandı)"
+                                   FontSize="14.5" FontWeight="Bold" />
+                        <TextBlock Text="Kamera yetenekleri varsayılmaz; ilerleyen sürümlerde bağlı Android cihazdan (Camera2/CameraX) sorgulanacaktır. Bu sürümde canlı kamera başlatılmaz."
+                                   Margin="0,4,0,10" TextWrapping="Wrap" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                        <ItemsControl ItemsSource="{Binding PlannedCameraControls}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource CardAltBackgroundBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="10,7" Margin="0,0,0,6">
+                                        <DockPanel>
+                                            <Border DockPanel.Dock="Right" Background="{DynamicResource PlannedBadgeBrush}"
+                                                    CornerRadius="4" Padding="7,2" VerticalAlignment="Center" Margin="10,0,0,0">
+                                                <TextBlock Text="{Binding StatusBadge}" FontSize="10.5"
+                                                           Foreground="{DynamicResource PlannedTextBrush}" />
+                                            </Border>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12.5" />
+                                                <TextBlock Text="{Binding CapabilityQueryRule}" FontSize="11.5"
+                                                           TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                                <TextBlock Text="{Binding TransportNote}" FontSize="11"
+                                                           Foreground="{DynamicResource MutedTextBrush}" />
+                                            </StackPanel>
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- 3.1 Canlı Telefon Kamerası ve Kalibrasyon (CameraCalibrationViewModel) Şablonu -->
+        <DataTemplate DataType="{x:Type vm:CameraCalibrationViewModel}">
+            <StackPanel Margin="0,0,0,20">
+                <!-- Bağlantı Yöntemi Seçimi Kartı -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14" Background="{DynamicResource AccentSubtleBrush}">
+                    <StackPanel>
+                        <TextBlock Text="Kamera Bağlantı Modu" FontSize="14.5" FontWeight="Bold" Margin="0,0,0,8" />
+                        <WrapPanel>
+                            <RadioButton Content="🔗 USB — scrcpy Motoru (Donanım Hızlandırmalı Dış Pencere)"
+                                         IsChecked="{Binding IsUsbMode}"
+                                         FontWeight="SemiBold" FontSize="13" Margin="0,0,24,4" />
+                            <RadioButton Content="📡 Wi-Fi — Ölçü Atölyesi Android Kamera Servisi (Yerel Ağ • Pencere İçi Önizleme)"
+                                         IsChecked="{Binding IsWifiMode}"
+                                         FontWeight="SemiBold" FontSize="13" Margin="0,0,0,4" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ================= BÖLÜM 1: WI-FI BAĞIMSIZ KAMERA SERVİSİ PANELİ ================= -->
+                <StackPanel Visibility="{Binding IsWifiMode, Converter={StaticResource BoolToVis}}">
+                    <!-- Wi-Fi Bağlantı Parametreleri Kartı -->
+                    <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,12">
+                                <Border DockPanel.Dock="Right" Background="{DynamicResource AccentSubtleBrush}" CornerRadius="5" Padding="10,4">
+                                    <TextBlock Text="Wi-Fi Canlı Akış" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
+                                </Border>
+                                <TextBlock Text="Ölçü Atölyesi Android Wi-Fi Kamera Servisi" FontSize="15" FontWeight="Bold" />
+                            </DockPanel>
+
+                            <TextBlock Text="Android telefonunuzdaki 'Ölçü Atölyesi' uygulamasından 'PC Kamera Bağlantısı' sayfasını açın. 'Yayını Başlat' düğmesine basarak gösterilen IP adresi ile 6 haneli PIN kodunu girin."
+                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,14" />
+
+                            <Grid Margin="0,0,0,14">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="14" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Sunucu URL Girişi -->
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Telefon Kamera Servisi Adresi (IP:Port)" FontSize="12" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding WifiServerAddress, UpdateSourceTrigger=PropertyChanged}"
+                                             Height="34" Padding="8,6" FontSize="13" VerticalContentAlignment="Center" />
+                                </StackPanel>
+
+                                <!-- PIN Kodu Girişi -->
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Eşleştirme Kodu (PIN)" FontSize="12" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding WifiPairingPin, UpdateSourceTrigger=PropertyChanged}"
+                                             Height="34" Padding="8,6" FontSize="14" FontWeight="Bold" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+                                </StackPanel>
+
+                                <!-- Bağlan Butonu -->
+                                <Button Grid.Column="4" Style="{StaticResource PrimaryButtonStyle}"
+                                        Command="{Binding ConnectWifiCommand}"
+                                        IsEnabled="{Binding CanConnectWifi}"
+                                        Content="▶ Canlı Yayına Bağlan"
+                                        VerticalAlignment="Bottom" Height="34" Padding="14,0" />
+
+                                <!-- Bağlantıyı Kes Butonu -->
+                                <Button Grid.Column="6" Style="{StaticResource SecondaryButtonStyle}"
+                                        Command="{Binding DisconnectWifiCommand}"
+                                        IsEnabled="{Binding CanDisconnectWifi}"
+                                        Content="⏹ Bağlantıyı Kes"
+                                        VerticalAlignment="Bottom" Height="34" Padding="14,0" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Pencere İçi Canlı Kamera Görüntü Ekranı -->
+                    <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,10">
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                    <Border Background="{DynamicResource CardAltBackgroundBrush}" CornerRadius="4" Padding="8,3" Margin="0,0,8,0">
+                                        <TextBlock Text="{Binding WifiResolutionText, StringFormat='Çözünürlük: {0}'}" FontSize="11.5" FontWeight="SemiBold" />
+                                    </Border>
+                                    <Border Background="{DynamicResource SuccessBadgeBrush}" CornerRadius="4" Padding="8,3" Margin="0,0,8,0">
+                                        <TextBlock Text="{Binding WifiFps, StringFormat='{}{0:F1} FPS'}" FontWeight="Bold" Foreground="{DynamicResource SuccessTextBrush}" FontSize="11.5" />
+                                    </Border>
+                                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                                            Command="{Binding CaptureCurrentFrameCommand}"
+                                            IsEnabled="{Binding HasLiveFrame}"
+                                            Content="📸 Bu Kareyi Yakala ve Ölç" Padding="10,3" FontSize="11.5" Margin="0,0,8,0" />
+                                    <Button Style="{StaticResource PrimaryButtonStyle}"
+                                            Command="{Binding CaptureHighResPhotoCommand}"
+                                            IsEnabled="{Binding CanCaptureHighResPhoto}"
+                                            Background="#0D9488" BorderBrush="#14B8A6"
+                                            Content="⭐ Yüksek Çözünürlüklü Fotoğraf Çek ve Ölç" Padding="12,3" FontSize="11.5" FontWeight="Bold" />
+                                </StackPanel>
+                                <TextBlock Text="Masaüstü Canlı Kamera Önizlemesi (Pencere İçi)" FontSize="14.5" FontWeight="Bold" VerticalAlignment="Center" />
+                            </DockPanel>
+
+                            <!-- Yüksek Çözünürlüklü Çekim İlerleme Bildirimi -->
+                            <Border Background="#1E293B" BorderBrush="#0D9488" BorderThickness="1" CornerRadius="6"
+                                    Padding="12,6" Margin="0,0,0,10"
+                                    Visibility="{Binding IsCapturingHighRes, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <TextBlock Text="⏳ " FontSize="14" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding HighResCaptureProgressText}" FontSize="12.5" FontWeight="SemiBold"
+                                               Foreground="#5EEAD4" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Kamera Görsel Çerçevesi -->
+                            <Border Background="#101216" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="8"
+                                    MinHeight="360" MaxHeight="520" ClipToBounds="True">
+                                <Grid>
+                                    <!-- Canlı Akış Görseli -->
+                                    <Image Source="{Binding LiveFrameSource}" Stretch="Uniform" />
+
+                                    <!-- Akış Yokken Uyarı ve Rehberlik Katmanı -->
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="24"
+                                                Visibility="{Binding HasLiveFrame, Converter={StaticResource BoolToVis}, ConverterParameter=Inverse}">
+                                        <TextBlock Text="📷" FontSize="44" HorizontalAlignment="Center" Margin="0,0,0,10" Opacity="0.5" />
+                                        <TextBlock Text="Canlı kamera görüntüsü bekleniyor" FontSize="15" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" Foreground="#E0E6ED" />
+                                        <TextBlock Text="Android telefonunuzdan 'Yayını Başlat' düğmesine basın ve yukarıdan 'Canlı Yayına Bağlan'ı tıklayın."
+                                                   FontSize="12" HorizontalAlignment="Center" Foreground="#8892B0" Margin="0,4,0,0" TextWrapping="Wrap" TextAlignment="Center" />
+
+                                        <!-- Canlı Hata Bildirimi (Bağlantı koptuğunda veya PIN hatalı olduğunda) -->
+                                        <Border Background="#2D1515" BorderBrush="#E05252" BorderThickness="1" CornerRadius="6"
+                                                Padding="14,8" Margin="0,14,0,0" HorizontalAlignment="Center" MaxWidth="500"
+                                                Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="⚠️ " FontSize="14" Foreground="#FF6B6B" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding ErrorDetails}" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="#FFD1D1" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Telefondaki Saklanan Ölçüm Fotoğrafları -->
+                    <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14"
+                            Visibility="{Binding IsWifiConnected, Converter={StaticResource BoolToVis}}">
+                        <Expander Header="📁 Telefondaki Saklanan Ölçüm Fotoğrafları (Kayıpsız İndirme)" IsExpanded="False">
+                            <StackPanel Margin="0,8,0,0">
+                                <DockPanel Margin="0,0,0,8">
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButtonStyle}"
+                                            Command="{Binding LoadPendingPhotosCommand}"
+                                            Content="🔄 Listeyi Yenile" Padding="8,3" FontSize="11.5" />
+                                    <TextBlock Text="Telefonun özel depolama alanında saklanan yüksek çözünürlüklü fotoğraflar. Bağlantı kopsa bile fotoğraflar silinmez; buradan tekrar indirebilirsiniz."
+                                               FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                </DockPanel>
+                                <ItemsControl ItemsSource="{Binding PendingRemotePhotos}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource CardAltBackgroundBrush}" CornerRadius="4" Padding="10,6" Margin="0,0,0,6">
+                                                <DockPanel>
+                                                    <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButtonStyle}"
+                                                            Command="{Binding DataContext.DownloadPendingPhotoCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Content="📥 PC'ye Aktar ve Ölç" Padding="8,3" FontSize="11" />
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding FileName}" FontWeight="Bold" FontSize="12" />
+                                                        <TextBlock Text="{Binding FileSizeBytes, StringFormat='Boyut: {0} bayt'}" FontSize="11" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Expander>
+                    </Border>
+                </StackPanel>
+
+                <!-- ================= BÖLÜM 2: USB SCRCPY MOTORU PANELİ ================= -->
+                <StackPanel Visibility="{Binding IsUsbMode, Converter={StaticResource BoolToVis}}">
+                <!-- Üst Durum ve scrcpy Motoru Bilgi Kartı -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" Background="{DynamicResource AccentSubtleBrush}" CornerRadius="5" Padding="10,4">
+                                <TextBlock Text="{Binding SessionStatusBadge}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource AccentBrush}" />
+                            </Border>
+                            <TextBlock Text="{Binding ShortSummary}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding DetailedScope}" Margin="0,6,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SecondaryTextBrush}" />
+
+                        <DockPanel Margin="0,10,0,0">
+                            <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding RefreshScrcpyCommand}"
+                                    Content="scrcpy Yenile"
+                                    Padding="10,4" Margin="10,0,0,0" />
+                            <StackPanel>
+                                <TextBlock Text="{Binding ScrcpyVersionText}" FontSize="12.5" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}" />
+                                <TextBlock Text="{Binding ScrcpyExecutablePath, StringFormat='Konum: {0}'}" FontSize="11" Margin="0,2,0,0"
+                                           Foreground="{DynamicResource MutedTextBrush}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Bağlı Telefon Durumu -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding NavigateToPhoneConnectionCommand}"
+                                    Content="Telefon Bağlantısına Git"
+                                    Margin="10,0,0,0" />
+                            <StackPanel>
+                                <TextBlock Text="Hedeflenen Android Telefon" FontSize="14" FontWeight="Bold" />
+                                <TextBlock Text="{Binding ConnectedPhoneTitle}" FontSize="13" FontWeight="SemiBold" Margin="0,2,0,0"
+                                           Foreground="{DynamicResource PrimaryTextBrush}" />
+                                <TextBlock Text="{Binding ConnectedPhoneSerial, StringFormat='Seri No: {0}'}" FontSize="11.5" Margin="0,2,0,0"
+                                           Foreground="{DynamicResource MutedTextBrush}" />
+                            </StackPanel>
+                        </DockPanel>
+
+                        <!-- Telefon bağlı değilse uyarı kutusu -->
+                        <Border Background="{DynamicResource CardAltBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,10,0,0"
+                                Visibility="{Binding HasNoConnectedPhone, Converter={StaticResource BoolToVis}}">
+                            <TextBlock Text="⚠ Kamera akışını başlatabilmek için önce 'Telefon Bağlantısı' modülünden USB ile bağlı hazır bir Android telefon seçmelisiniz."
+                                       Foreground="{DynamicResource WarningTextBrush}" FontWeight="SemiBold" FontSize="12.5" TextWrapping="Wrap" />
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Kamera Parametreleri ve Akış Kontrol Kartı -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="Canlı Kamera Yapılandırması ve Akış Denetimi" FontSize="14.5" FontWeight="Bold" Margin="0,0,0,12" />
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Kamera Seçimi -->
+                            <StackPanel Grid.Column="0">
+                                <DockPanel Margin="0,0,0,4">
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButtonStyle}"
+                                            Command="{Binding ScanCamerasCommand}"
+                                            Content="Tara" Padding="8,2" FontSize="11" Margin="6,0,0,0"
+                                            IsEnabled="{Binding CanScanCameras}" />
+                                    <TextBlock Text="Kamera Sensörü" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                </DockPanel>
+                                <ComboBox ItemsSource="{Binding AvailableCameras}"
+                                          SelectedItem="{Binding SelectedCamera}"
+                                          DisplayMemberPath="DisplayTitle"
+                                          Height="32" />
+                            </StackPanel>
+
+                            <!-- Çözünürlük ve Mod Seçimi -->
+                            <StackPanel Grid.Column="2">
+                                <DockPanel Margin="0,0,0,4">
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource SecondaryButtonStyle}"
+                                            Command="{Binding ScanResolutionsCommand}"
+                                            Content="Sorgula" Padding="8,2" FontSize="11" Margin="6,0,0,0"
+                                            IsEnabled="{Binding CanScanCameras}" />
+                                    <TextBlock Text="Çözünürlük ve Mod" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                </DockPanel>
+                                <ComboBox ItemsSource="{Binding AvailableCameraSizes}"
+                                          SelectedItem="{Binding SelectedCameraSize}"
+                                          DisplayMemberPath="DisplayText"
+                                          Height="32" />
+                            </StackPanel>
+
+                            <!-- FPS Seçimi -->
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Kare Hızı (FPS)" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                <ComboBox ItemsSource="{Binding AvailableFpsOptions}"
+                                          SelectedItem="{Binding SelectedFps}"
+                                          Height="32" />
+                            </StackPanel>
+
+                            <!-- Bit Hızı Seçimi -->
+                            <StackPanel Grid.Column="6">
+                                <TextBlock Text="Bit Hızı (Bitrate)" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,4" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                <ComboBox ItemsSource="{Binding AvailableBitrates}"
+                                          SelectedItem="{Binding SelectedBitrate}"
+                                          Height="32" />
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Eylem Butonları -->
+                        <WrapPanel Margin="0,0,0,10">
+                            <Button Style="{StaticResource PrimaryButtonStyle}"
+                                    Command="{Binding StartCameraCommand}"
+                                    Content="▶  Kamerayı Başlat"
+                                    IsEnabled="{Binding CanStartCamera}"
+                                    Padding="16,8"
+                                    Margin="0,0,10,6" />
+                            <Button Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding StopCameraCommand}"
+                                    Content="⏹  Kamerayı Durdur"
+                                    IsEnabled="{Binding CanStopCamera}"
+                                    Padding="16,8"
+                                    Margin="0,0,10,6" />
+                        </WrapPanel>
+
+                        <!-- Canlı Durum ve Mesaj Alanı -->
+                        <TextBlock Text="{Binding StatusMessage}" FontWeight="SemiBold" FontSize="12.5"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,4,0,0" />
+                        <TextBlock Text="{Binding ErrorDetails}" Margin="0,4,0,0" FontSize="12"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource WarningTextBrush}" FontWeight="SemiBold"
+                                   Visibility="{Binding HasError, Converter={StaticResource BoolToVis}}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Mimari ve Pencere Notu -->
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14" Background="{DynamicResource AccentSubtleBrush}">
+                    <StackPanel>
+                        <TextBlock Text="Masaüstü Canlı Önizleme Mimarisi (scrcpy 5.0.1 • SDL3)" FontWeight="Bold" FontSize="13.5" />
+                        <TextBlock Text="scrcpy 5.0.1 video motoru, yüksek FPS ve minimum gecikme için donanım hızlandırmalı SDL3 harici penceresi kullanır. v0.5.0 ile birlikte ayrıca Ölçü Atölyesi Bağımsız Wi-Fi Kamera Servisi üzerinden doğrudan pencere içinde canlı önizleme de sunulmaktadır."
+                                   Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    </StackPanel>
+                </Border>
+                </StackPanel>
+
+                <!-- Planlanan Kalibrasyon İşlemleri -->
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Kalibrasyon ve Gelecek Özellikler (v0.5.0 Planlandı)" FontWeight="Bold" FontSize="14" Margin="0,0,0,10" />
+                        <ItemsControl ItemsSource="{Binding PlannedCalibrationActions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:PlannedActionItem}">
+                                    <Border Background="{DynamicResource CardAltBackgroundBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Right"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    Content="{Binding ButtonTitle}"
+                                                    IsEnabled="False"
+                                                    Margin="12,0,0,0" />
+                                            <TextBlock Text="{Binding Description}" VerticalAlignment="Center"
+                                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- 4. Genel Modül Sayfası (ModulePageViewModel) Şablonu -->
+        <DataTemplate DataType="{x:Type vm:ModulePageViewModel}">
+            <StackPanel Margin="0,0,0,20">
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" Background="{DynamicResource WarningBadgeBrush}" CornerRadius="5" Padding="10,4">
+                                <TextBlock Text="{Binding StateBadge}" FontWeight="SemiBold" Foreground="{DynamicResource WarningTextBrush}" />
+                            </Border>
+                            <TextBlock Text="{Binding ShortSummary}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding DetailedScope}" Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SecondaryTextBrush}" />
+                        <TextBlock Text="{Binding TargetVersion, StringFormat='Hedef Sürüm: {0}'}"
+                                   Margin="0,8,0,0" FontSize="12" Foreground="{DynamicResource MutedTextBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14" Background="{DynamicResource AccentSubtleBrush}">
+                    <StackPanel>
+                        <TextBlock Text="Mimari ve Açık Kaynak Entegrasyon Notu" FontWeight="Bold" FontSize="13.5" />
+                        <TextBlock Text="{Binding ArchitectureNote}" Margin="0,6,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SecondaryTextBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Mevcut Özellikler (v0.4.0)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" />
+                            <ItemsControl ItemsSource="{Binding CurrentCapabilities}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding StringFormat='✓  {0}'}" TextWrapping="Wrap"
+                                                   Margin="0,0,0,6" Foreground="{DynamicResource SuccessTextBrush}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Planlanan Özellikler (Sonraki Sürümler)" FontWeight="Bold" FontSize="14" Margin="0,0,0,8" />
+                            <ItemsControl ItemsSource="{Binding PlannedCapabilities}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding StringFormat='•  {0}'}" TextWrapping="Wrap"
+                                                   Margin="0,0,0,6" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Planlanan Masaüstü İşlemleri (Bu Sürümde Devre Dışı)" FontWeight="Bold" FontSize="14" Margin="0,0,0,10" />
+                        <ItemsControl ItemsSource="{Binding PlannedActions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:PlannedActionItem}">
+                                    <Border Background="{DynamicResource CardAltBackgroundBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <Button DockPanel.Dock="Right"
+                                                    Style="{StaticResource SecondaryButtonStyle}"
+                                                    Content="{Binding ButtonTitle}"
+                                                    IsEnabled="False"
+                                                    Margin="12,0,0,0" />
+                                            <TextBlock Text="{Binding Description}" VerticalAlignment="Center"
+                                                       TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- 5. Fotoğraftan Ölçüm (PhotoMeasurementViewModel) Şablonu (v0.6.7 Sadeleştirilmiş) -->
+        <DataTemplate DataType="{x:Type vm:PhotoMeasurementViewModel}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />  <!-- 0: Büyük buton -->
+                    <RowDefinition Height="Auto" />  <!-- 1: İnce referans ayar satırı -->
+                    <RowDefinition Height="Auto" />  <!-- 2: Uyarı bandı (opsiyonel) -->
+                    <RowDefinition Height="*" MinHeight="400" /> <!-- 3: Tuval -->
+                    <RowDefinition Height="Auto" />  <!-- 4: Alt bilgi satırı -->
+                </Grid.RowDefinitions>
+
+                <!-- SATIR 0: Büyük ÖLÇÜM PENCERESİ butonu -->
+                <Border Grid.Row="0" Margin="0,0,0,10"
+                        Background="{DynamicResource AccentSubtleBrush}"
+                        BorderBrush="{DynamicResource AccentBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Fotoğraftan Ölçüm Çalışma Alanı"
+                                       FontSize="15" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource PrimaryTextBrush}" />
+                            <TextBlock Text="Ölçüm araçları, görüntü ayarları ve DXF dışa aktarma ayrı pencerede yer alır."
+                                       FontSize="12" Margin="0,3,0,0"
+                                       Foreground="{DynamicResource SecondaryTextBrush}" />
+                        </StackPanel>
+
+                        <!-- Büyük açma butonu -->
+                        <!-- MainWindowViewModel seviyesindeki OpenMeasurementWindowCommand'a DataContext vekil üzerinden erişir -->
+                        <Button Grid.Column="1"
+                                Command="{Binding DataContext.OpenMeasurementWindowCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Height="44" Padding="20,0"
+                                ToolTip="Ayrı tam ekran ölçüm penceresini açar (F2)">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE737;" FontFamily="Segoe Fluent Icons"
+                                           FontSize="16" VerticalAlignment="Center" Margin="0,0,10,0" />
+                                <TextBlock Text="ÖLÇÜM PENCERESİ (F2)" FontWeight="Bold" FontSize="14"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- SATIR 1: İnce referans ve birim satırı (kart) -->
+                <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}"
+                        Padding="12,8" Margin="0,0,0,8">
+                    <DockPanel LastChildFill="False">
+                        <!-- Fotoğraf seç düğmesi -->
+                        <Button DockPanel.Dock="Left"
+                                Command="{Binding PickPhotoCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Padding="12,6" Margin="0,0,12,0"
+                                ToolTip="Ölçüm yapılacak yeni bir fotoğraf dosyası seç">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xEB9F;" FontFamily="Segoe Fluent Icons"
+                                           FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBlock Text="Fotoğraf Seç..." VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Hızlı referans şablonu ComboBox -->
+                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="0,0,12,0"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="Hazır Şablon:" VerticalAlignment="Center" Margin="0,0,6,0"
+                                       Foreground="{DynamicResource SecondaryTextBrush}" />
+                            <ComboBox ItemsSource="{Binding ReferenceObjects}"
+                                      SelectedItem="{Binding SelectedReferenceObject}"
+                                      DisplayMemberPath="Name"
+                                      Width="190" Height="30" />
+                        </StackPanel>
+
+                        <!-- Referans uzunluk kutusu -->
+                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Margin="0,0,12,0"
+                                    VerticalAlignment="Center">
+                            <TextBlock Text="Referans:" VerticalAlignment="Center" Margin="0,0,6,0"
+                                       Foreground="{DynamicResource SecondaryTextBrush}" />
+                            <TextBox Text="{Binding ReferenceLengthInput, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="70" Height="30"
+                                     VerticalContentAlignment="Center" HorizontalContentAlignment="Right"
+                                     Padding="6,0" Margin="0,0,6,0" />
+                            <ComboBox ItemsSource="{Binding Units}"
+                                      SelectedValue="{Binding SelectedUnit}"
+                                      SelectedValuePath="Unit"
+                                      DisplayMemberPath="DisplayName"
+                                      Width="75" Height="30" />
+                            <Button Command="{Binding ApplyReferenceCommand}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Padding="10,6" Margin="6,0,0,0"
+                                    Content="Uygula" ToolTip="Girilen referans uzunluğunu ölçeğe uygula" />
+                        </StackPanel>
+
+                        <!-- Cetvel Göster / Gizle Toggle -->
+                        <CheckBox DockPanel.Dock="Left"
+                                  IsChecked="{Binding ShowRuler}"
+                                  Content="Cetvelleri Göster"
+                                  VerticalAlignment="Center" Margin="6,0,12,0" />
+
+                        <!-- Çözünürlük ve ölçek özeti (sağda) -->
+                        <TextBlock DockPanel.Dock="Right"
+                                   Text="{Binding ResolutionSummary}"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontSize="12" />
+                    </DockPanel>
+                </Border>
+
+                <!-- SATIR 2: Referans uyarı bandı (yalnızca referans girilmemişse görünür) -->
+                <Border Grid.Row="2"
+                        Visibility="{Binding HasReferenceWarning, Converter={StaticResource BoolToVis}}"
+                        Background="#FFFDF3E8" BorderBrush="#FFF0A04B" BorderThickness="1"
+                        CornerRadius="6" Padding="12,6" Margin="0,0,0,8">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE7BA;" FontFamily="Segoe Fluent Icons"
+                                   Foreground="#FFD97706" FontSize="14"
+                                   VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBlock Text="{Binding ReferenceWarningText}"
+                                   Foreground="#FF92400E" FontSize="12"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <!-- SATIR 3: Önizleme Tuvali (tam genişlik/yükseklik, ContextMenu ile) -->
+                <Border Grid.Row="3"
+                        Background="{DynamicResource CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource BorderSubtleBrush}"
+                        BorderThickness="1"
+                        CornerRadius="6"
+                        ClipToBounds="True">
+                    <ctl:MeasurementCanvas
+                        Session="{Binding Session}"
+                        Image="{Binding PhotoImage}"
+                        FitRequest="{Binding FitRequest}"
+                        DisplaySettings="{Binding ImageAdjustment.DisplaySettings}"
+                        ShowGrid="{Binding ImageAdjustment.ShowGrid}"
+                        ShowRuler="{Binding ShowRuler}"
+                        ScreenMillimetresPerDip="{Binding ScreenMillimetresPerDip}"
+                        MagnifierEnabled="{Binding IsMagnifierEnabled, Mode=TwoWay}"
+                        MagnifierZoom="{Binding MagnifierZoom, Mode=TwoWay}">
+                        <ctl:MeasurementCanvas.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Ölçüm Penceresini Aç (F2)"
+                                          Command="{Binding DataContext.OpenMeasurementWindowCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="&#xE737;" FontFamily="Segoe Fluent Icons" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
+                                <MenuItem Header="Cetvelleri Göster/Gizle"
+                                          IsCheckable="True"
+                                          IsChecked="{Binding ShowRuler}" />
+                                <MenuItem Header="Ekran Kalibrasyonu..."
+                                          Command="{Binding DataContext.OpenScreenCalibrationCommand, RelativeSource={RelativeSource AncestorType=Window}}">
+                                    <MenuItem.Icon>
+                                        <TextBlock Text="&#xE7E7;" FontFamily="Segoe Fluent Icons" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator />
+                                <MenuItem Header="Sığdır (F)"
+                                          Command="{Binding ResetZoomCommand}" />
+                            </ContextMenu>
+                        </ctl:MeasurementCanvas.ContextMenu>
+                    </ctl:MeasurementCanvas>
+                </Border>
+
+                <!-- SATIR 4: Alt bilgi satırı (koyu, kompakt durum bandı) -->
+                <Border Grid.Row="4" Margin="0,6,0,0" Padding="8,4"
+                        Background="{DynamicResource CardAltBackgroundBrush}"
+                        CornerRadius="4">
+                    <DockPanel>
+                        <!-- Koordinat ve büyüteç durumu (sağda) -->
+                        <TextBlock DockPanel.Dock="Right"
+                                   Text="{Binding LoupeStatusText}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   FontSize="11" VerticalAlignment="Center" />
+                        <!-- Dinamik durum metni (solda) -->
+                        <TextBlock Text="{Binding BottomInfoText}"
+                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" />
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <!-- 6. Ayarlar (SettingsViewModel) Şablonu -->
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <StackPanel Margin="0,0,0,20">
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="Görünüm ve Tema" FontSize="15" FontWeight="Bold" />
+                        <TextBlock Text="Masaüstü arayüzünü açık, koyu veya Windows sistem temasına göre anında değiştirebilirsiniz."
+                                   Margin="0,4,0,12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                        <ComboBox Width="260" HorizontalAlignment="Left"
+                                  ItemsSource="{Binding ThemeOptions}"
+                                  SelectedValue="{Binding SelectedTheme}"
+                                  SelectedValuePath="Mode"
+                                  DisplayMemberPath="DisplayName"
+                                  Padding="8,5" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14">
+                    <StackPanel>
+                        <TextBlock Text="Varsayılan Ölçü Birimi" FontSize="15" FontWeight="Bold" />
+                        <TextBlock Text="Yeni ölçüm oturumlarında ve CAD dışa aktarımında kullanılacak varsayılan uzunluk birimi."
+                                   Margin="0,4,0,12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                        <ComboBox Width="260" HorizontalAlignment="Left"
+                                  ItemsSource="{Binding UnitOptions}"
+                                  SelectedValue="{Binding SelectedDefaultUnit}"
+                                  SelectedValuePath="Unit"
+                                  DisplayMemberPath="DisplayName"
+                                  Padding="8,5" />
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Çalışma Alanı ve Kayıt Durumu" FontSize="15" FontWeight="Bold" />
+                        <TextBlock Text="{Binding WorkspaceDirectory, StringFormat='Yerel Çalışma Alanı Dizini: {0}'}"
+                                   Margin="0,6,0,6" Foreground="{DynamicResource SecondaryTextBrush}" />
+                        <TextBlock Text="{Binding SaveFeedback}" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource SuccessTextBrush}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- 7. Yardım ve Açık Kaynak Rehberi (HelpViewModel) Şablonu -->
+        <DataTemplate DataType="{x:Type vm:HelpViewModel}">
+            <StackPanel Margin="0,0,0,20">
+                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14" Background="{DynamicResource AccentSubtleBrush}">
+                    <StackPanel>
+                        <TextBlock Text="Ortak Kütüphane ve Mimari Notlar (OlcuAtolyesi.Core)" FontSize="15" FontWeight="Bold" />
+                        <ItemsControl ItemsSource="{Binding SharedLibraryNotes}" Margin="0,8,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding StringFormat='•  {0}'}" TextWrapping="Wrap"
+                                               Margin="0,0,0,8" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <Border Style="{StaticResource CardBorderStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Gelecekteki Açık Kaynak Entegrasyon Adayları ve Lisans Sınırları"
+                                   FontSize="15" FontWeight="Bold" Margin="0,0,0,10" />
+                        <ItemsControl ItemsSource="{Binding OpenSourceCandidates}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource CardAltBackgroundBrush}"
+                                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                            BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <DockPanel>
+                                                <Border DockPanel.Dock="Right" Background="{DynamicResource PlannedBadgeBrush}"
+                                                        CornerRadius="4" Padding="8,2">
+                                                    <TextBlock Text="{Binding License}" FontSize="11.5" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource PlannedTextBrush}" />
+                                                </Border>
+                                                <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="13.5" />
+                                            </DockPanel>
+                                            <TextBlock Text="{Binding RepositoryUrl}" FontSize="11.5"
+                                                       Foreground="{DynamicResource AccentBrush}" Margin="0,2,0,4" />
+                                            <TextBlock Text="{Binding PurposeInWorkspace}" TextWrapping="Wrap"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}" />
+                                            <TextBlock Text="{Binding IntegrationStrategy, StringFormat='Entegrasyon Yöntemi: {0}'}"
+                                                       Margin="0,4,0,0" FontSize="11.5" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource MutedTextBrush}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Sol Navigasyon Menüsü -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource SidebarBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderSubtleBrush}"
+                BorderThickness="0,0,1,0">
+            <DockPanel Margin="12,14,12,14">
+                <StackPanel DockPanel.Dock="Top" Margin="4,0,4,14">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <Image Source="pack://application:,,,/OlcuAtolyesi.PC;component/Resources/app_icon.png" Width="26" Height="26" Margin="0,0,8,0" RenderOptions.BitmapScalingMode="HighQuality" />
+                        <TextBlock Text="{Binding AppTitle}" FontSize="17" FontWeight="Bold"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" />
+                    </StackPanel>
+                    <TextBlock Text="v0.5.0.5 • Windows Masaüstü" FontSize="11.5"
+                               Foreground="{DynamicResource AccentBrush}" Margin="34,0,0,0" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom" Margin="0,10,0,0">
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding OpenDiagnosticConsoleCommand}"
+                            HorizontalAlignment="Stretch"
+                            Padding="10,8"
+                            Margin="0,0,0,8"
+                            Cursor="Hand">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right"
+                                    Background="{DynamicResource AccentSubtleBrush}"
+                                    CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                <TextBlock Text="Canlı" FontSize="10" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource AccentBrush}" />
+                            </Border>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="🖥️" FontSize="13" Margin="0,0,8,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Tanılama Konsolu" FontSize="12.5" FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Button>
+
+                    <Border Background="{DynamicResource CardAltBackgroundBrush}"
+                            CornerRadius="6" Padding="10,8">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding ToggleThemeCommand}"
+                                    Content="Tema Değiştir"
+                                    Padding="8,4" FontSize="11.5" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding CurrentThemeLabel}" FontSize="12" FontWeight="SemiBold" />
+                                <TextBlock Text="Açık / Koyu Görünüm" FontSize="10.5"
+                                           Foreground="{DynamicResource MutedTextBrush}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding NavigationItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:NavigationMenuItem}">
+                                <Button Command="{Binding SelectCommand}"
+                                        Margin="0,0,0,4"
+                                        Cursor="Hand"
+                                        Background="Transparent"
+                                        BorderThickness="0">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="NavBorder"
+                                                    CornerRadius="6"
+                                                    Padding="10,8"
+                                                    Background="Transparent"
+                                                    BorderBrush="Transparent"
+                                                    BorderThickness="1">
+                                                <DockPanel>
+                                                    <Border DockPanel.Dock="Right"
+                                                            Background="{DynamicResource PlannedBadgeBrush}"
+                                                            CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding StateBadge}" FontSize="10"
+                                                                   Foreground="{DynamicResource PlannedTextBrush}" />
+                                                    </Border>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding IconGlyph}" Width="22" FontSize="14"
+                                                                   Foreground="{DynamicResource AccentBrush}"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="Medium"
+                                                                   Foreground="{DynamicResource PrimaryTextBrush}"
+                                                                   VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter TargetName="NavBorder" Property="Background" Value="{DynamicResource AccentSubtleBrush}" />
+                                                    <Setter TargetName="NavBorder" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                                </DataTrigger>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="NavBorder" Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- Sağ Ana İçerik Alanı -->
+        <DockPanel Grid.Column="1" Margin="22,18,22,14">
+            <!-- Üst Başlık Çubuğu -->
+            <Border DockPanel.Dock="Top"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
+                    BorderThickness="0,0,0,1"
+                    Padding="0,0,0,12"
+                    Margin="0,0,0,16">
+                <DockPanel>
+                    <Border DockPanel.Dock="Right"
+                            Background="{DynamicResource CardAltBackgroundBrush}"
+                            BorderBrush="{DynamicResource BorderSubtleBrush}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12,5"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="{Binding CurrentModuleStateBadge}" FontWeight="SemiBold" FontSize="12"
+                                   Foreground="{DynamicResource AccentBrush}" />
+                    </Border>
+                    <StackPanel>
+                        <TextBlock Text="{Binding CurrentModuleTitle}" FontSize="22" FontWeight="Bold"
+                                   Foreground="{DynamicResource PrimaryTextBrush}" />
+                        <TextBlock Text="{Binding Subtitle}" FontSize="12"
+                                   Foreground="{DynamicResource MutedTextBrush}" Margin="0,2,0,0" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+
+            <!-- Alt Durum Çubuğu -->
+            <Border DockPanel.Dock="Bottom"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
+                    BorderThickness="0,1,0,0"
+                    Padding="0,8,0,0"
+                    Margin="0,8,0,0">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Right"
+                               Text="Ortak Çekirdek: OlcuAtolyesi.Core (.NET 10)"
+                               FontSize="11.5"
+                               Foreground="{DynamicResource MutedTextBrush}" />
+                    <TextBlock Text="{Binding VersionText}"
+                               FontSize="11.5"
+                               Foreground="{DynamicResource MutedTextBrush}" />
+                </DockPanel>
+            </Border>
+
+            <!-- Seçili Sayfa İçeriği -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ContentControl Content="{Binding CurrentPage}" />
+            </ScrollViewer>
+        </DockPanel>
+    </Grid>
+</Window>

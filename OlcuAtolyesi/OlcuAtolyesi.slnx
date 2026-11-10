@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="OlcuAtolyesi/OlcuAtolyesi.csproj" />
+  <Project Path="Tests/LogicChecks/LogicChecks.csproj" />
+</Solution>

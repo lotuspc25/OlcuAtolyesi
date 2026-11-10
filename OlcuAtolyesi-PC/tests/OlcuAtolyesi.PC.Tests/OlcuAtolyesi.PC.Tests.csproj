@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>OlcuAtolyesi.PC.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OlcuAtolyesi.Core\OlcuAtolyesi.Core.csproj" />
+    <ProjectReference Include="..\..\src\OlcuAtolyesi.PC\OlcuAtolyesi.PC.csproj" />
+  </ItemGroup>
+
+</Project>

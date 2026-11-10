@@ -1,0 +1,53 @@
+## .git_backup
+**/.git_backup/
+.git_backup/
+
+## Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.launchsettings.json
+
+## Build Results (bin / obj)
+[Bb]in/
+[Oo]bj/
+**/[Bb]in/
+**/[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+ARM/
+ARM64/
+
+## .NET Core / MAUI / Android
+*.apk
+*.aab
+*.dex
+*.keystore
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+## NuGet
+packages/
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+
+## Test & Diagnostics
+TestResults/
+*.log
+**/Logs/
+**/session_active.marker
+
+## OS Generated
+Thumbs.db
+desktop.ini
+.DS_Store
+$RECYCLE.BIN/

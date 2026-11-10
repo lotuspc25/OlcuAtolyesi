@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\OlcuAtolyesi\Diagnostics\*.cs" Link="Diagnostics\%(Filename)%(Extension)" />
+    <Compile Include="..\..\OlcuAtolyesi\Models\*.cs" Link="Models\%(Filename)%(Extension)" />
+    <Compile Include="..\..\OlcuAtolyesi\Resources\Strings\*.cs" Link="Resources\Strings\%(Filename)%(Extension)" />
+    <Compile Include="..\..\OlcuAtolyesi\Services\*.cs"
+             Exclude="..\..\OlcuAtolyesi\Services\MauiPreferenceStore.cs"
+             Link="Services\%(Filename)%(Extension)" />
+    <Compile Include="..\..\OlcuAtolyesi\ViewModels\*.cs" Link="ViewModels\%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

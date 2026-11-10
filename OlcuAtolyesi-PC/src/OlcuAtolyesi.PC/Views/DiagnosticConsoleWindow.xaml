@@ -1,0 +1,327 @@
+<Window x:Class="OlcuAtolyesi.PC.Views.DiagnosticConsoleWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:OlcuAtolyesi.PC.ViewModels"
+        xmlns:diag="clr-namespace:OlcuAtolyesi.Core.Diagnostics;assembly=OlcuAtolyesi.Core"
+        Title="Ölçü Atölyesi — Merkezi Tanılama Konsolu (v0.5.0.5)"
+        Icon="pack://application:,,,/OlcuAtolyesi.PC;component/Resources/app.ico"
+        Width="1180"
+        Height="720"
+        MinWidth="960"
+        MinHeight="540"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Foreground="{DynamicResource PrimaryTextBrush}"
+        FontFamily="Segoe UI">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/OlcuAtolyesi.PC;component/Themes/SharedStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="16,14,16,12">
+        <Grid.RowDefinitions>
+            <!-- 0: Başlık ve Telefon Eşitleme Paneli -->
+            <RowDefinition Height="Auto" />
+            <!-- 1: Araç Çubuğu / Filtreler -->
+            <RowDefinition Height="Auto" />
+            <!-- 2: Ana Günlük Listesi ve Detay Bölücü -->
+            <RowDefinition Height="*" />
+            <!-- 3: Durum Çubuğu -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 0. Üst Başlık ve Telefon Eşitleme -->
+        <Border Grid.Row="0"
+                Style="{StaticResource CardBorderStyle}"
+                Padding="12,10"
+                Margin="0,0,0,10">
+            <DockPanel>
+                <!-- Sağ: Telefon Senkronizasyonu -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Telefon IP:" VerticalAlignment="Center" Margin="0,0,6,0"
+                               FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    <TextBox Text="{Binding PhoneServerUrl, UpdateSourceTrigger=PropertyChanged}"
+                             Width="165" Padding="6,4" Margin="0,0,8,0" VerticalAlignment="Center" />
+
+                    <TextBlock Text="PIN:" VerticalAlignment="Center" Margin="0,0,6,0"
+                               FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" />
+                    <TextBox Text="{Binding PhonePin, UpdateSourceTrigger=PropertyChanged}"
+                             Width="70" Padding="6,4" Margin="0,0,8,0" VerticalAlignment="Center" />
+
+                    <Button Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding FetchAndroidLogsCommand}"
+                            Padding="12,5"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📲 Telefondan Logları Al" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Sol: Başlık ve Açıklama -->
+                <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="🖥️" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Merkezi Tanılama ve Canlı Olay Konsolu"
+                                   FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="PC ve Android cihaz olayları, PIN korumalı log aktarımı, döngüsel arşivleme ve hata tanılaması (v0.5.0.5)"
+                               FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="26,2,0,0" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- 1. Filtreler ve Araç Çubuğu -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource CardAltBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderSubtleBrush}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="10,6"
+                Margin="0,0,0,10">
+            <DockPanel>
+                <!-- Sağ Taraf: Eylem Düğmeleri -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <CheckBox IsChecked="{Binding IsAutoScrollEnabled}"
+                              Content="Otomatik Kaydır"
+                              VerticalAlignment="Center"
+                              Margin="0,0,10,0" />
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding CopySelectedCommand}"
+                            Content="Seçileni Kopyala"
+                            Padding="8,4" Margin="0,0,6,0" />
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding CopyAllCommand}"
+                            Content="Tümünü Kopyala"
+                            Padding="8,4" Margin="0,0,6,0" />
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding ClearViewCommand}"
+                            Content="Temizle"
+                            Padding="8,4" Margin="0,0,6,0" />
+
+                    <Button Style="{StaticResource PrimaryButtonStyle}"
+                            Command="{Binding ExportReportCommand}"
+                            Content="💾 Raporu Dışa Aktar"
+                            Padding="10,4" />
+                </StackPanel>
+
+                <!-- Sol Taraf: Filtre Elemanları -->
+                <WrapPanel VerticalAlignment="Center">
+                    <TextBlock Text="Kaynak:" VerticalAlignment="Center" Margin="0,0,6,0"
+                               FontSize="12" FontWeight="SemiBold" />
+                    <ComboBox ItemsSource="{Binding SourceFilterOptions}"
+                              SelectedItem="{Binding SelectedSourceFilter}"
+                              Width="95" Padding="6,3" Margin="0,0,12,0" />
+
+                    <TextBlock Text="Seviye:" VerticalAlignment="Center" Margin="0,0,6,0"
+                               FontSize="12" FontWeight="SemiBold" />
+                    <ComboBox ItemsSource="{Binding LevelFilterOptions}"
+                              SelectedItem="{Binding SelectedLevelFilter}"
+                              Width="105" Padding="6,3" Margin="0,0,12,0" />
+
+                    <TextBlock Text="Ara:" VerticalAlignment="Center" Margin="0,0,6,0"
+                               FontSize="12" FontWeight="SemiBold" />
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             Width="200" Padding="6,3" Margin="0,0,6,0" />
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding RefreshCommand}"
+                            Content="↻ Yenile"
+                            Padding="8,3" />
+                </WrapPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- 2. Ana Günlük Izgarası ve Detay Bölücü -->
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <!-- Liste Alanı -->
+                <RowDefinition Height="*" MinHeight="150" />
+                <!-- Bölücü Çizgi -->
+                <RowDefinition Height="6" />
+                <!-- Detay Alanı -->
+                <RowDefinition Height="130" MinHeight="80" />
+            </Grid.RowDefinitions>
+
+            <!-- Günlük Listesi (DataGrid) -->
+            <DataGrid x:Name="LogDataGrid"
+                      Grid.Row="0"
+                      ItemsSource="{Binding FilteredView}"
+                      SelectedItem="{Binding SelectedEntry, Mode=TwoWay}"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="{DynamicResource BorderSubtleBrush}"
+                      Background="{DynamicResource CardBackgroundBrush}"
+                      BorderBrush="{DynamicResource BorderSubtleBrush}"
+                      BorderThickness="1"
+                      RowBackground="Transparent"
+                      AlternatingRowBackground="{DynamicResource CardAltBackgroundBrush}"
+                      ScrollViewer.CanContentScroll="True"
+                      VirtualizingStackPanel.IsVirtualizing="True"
+                      VirtualizingStackPanel.VirtualizationMode="Recycling"
+                      CanUserResizeRows="False"
+                      CanUserReorderColumns="False"
+                      CanUserSortColumns="True">
+
+                <DataGrid.Resources>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="{DynamicResource CardAltBackgroundBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+                        <Setter Property="FontWeight" Value="SemiBold" />
+                        <Setter Property="Padding" Value="8,6" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
+                        <Setter Property="BorderThickness" Value="0,0,1,1" />
+                    </Style>
+                    <Style TargetType="DataGridCell">
+                        <Setter Property="Padding" Value="6,4" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="DataGridCell">
+                                    <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
+                                        <ContentPresenter VerticalAlignment="Center" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </DataGrid.Resources>
+
+                <DataGrid.Columns>
+                    <!-- Zaman -->
+                    <DataGridTextColumn Header="Zaman"
+                                        Binding="{Binding Timestamp, StringFormat='HH:mm:ss.fff'}"
+                                        Width="95" />
+
+                    <!-- Seviye Rozeti -->
+                    <DataGridTemplateColumn Header="Seviye" Width="85" SortMemberPath="Level">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Center">
+                                    <TextBlock x:Name="LevelText" Text="{Binding Level}" FontSize="11" FontWeight="Bold" />
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static diag:DiagnosticLevel.Critical}">
+                                        <Setter TargetName="LevelText" Property="Foreground" Value="#FF4D4F" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static diag:DiagnosticLevel.Error}">
+                                        <Setter TargetName="LevelText" Property="Foreground" Value="#FF7875" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static diag:DiagnosticLevel.Warn}">
+                                        <Setter TargetName="LevelText" Property="Foreground" Value="#FAAD14" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static diag:DiagnosticLevel.Event}">
+                                        <Setter TargetName="LevelText" Property="Foreground" Value="#9254DE" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static diag:DiagnosticLevel.Info}">
+                                        <Setter TargetName="LevelText" Property="Foreground" Value="#13C2C2" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Level}" Value="{x:Static diag:DiagnosticLevel.Debug}">
+                                        <Setter TargetName="LevelText" Property="Foreground" Value="#8C8C8C" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Kaynak Rozeti -->
+                    <DataGridTemplateColumn Header="Kaynak" Width="80" SortMemberPath="Source">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Center">
+                                    <TextBlock x:Name="SourceText" Text="{Binding Source}" FontSize="11" FontWeight="SemiBold" />
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding Source}" Value="{x:Static diag:DiagnosticSource.PC}">
+                                        <Setter TargetName="SourceText" Property="Foreground" Value="#1890FF" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Source}" Value="{x:Static diag:DiagnosticSource.Android}">
+                                        <Setter TargetName="SourceText" Property="Foreground" Value="#52C41A" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Modül -->
+                    <DataGridTextColumn Header="Modül" Binding="{Binding Module}" Width="120" />
+
+                    <!-- Olay Kodu -->
+                    <DataGridTextColumn Header="Olay Kodu" Binding="{Binding EventCode}" Width="140" />
+
+                    <!-- Mesaj -->
+                    <DataGridTextColumn Header="Mesaj" Binding="{Binding Message}" Width="*" />
+
+                    <!-- CID -->
+                    <DataGridTextColumn Header="Korelasyon (CID)" Binding="{Binding CorrelationId}" Width="110" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Izgara Bölücüsü -->
+            <GridSplitter Grid.Row="1"
+                          Height="6"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Center"
+                          Background="{DynamicResource BorderSubtleBrush}"
+                          Cursor="SizeNS" />
+
+            <!-- Alt Detay İnceleme Paneli -->
+            <Border Grid.Row="2"
+                    Style="{StaticResource CardBorderStyle}"
+                    Padding="10,8">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top"
+                               Text="Kayıt Ayrıntıları ve Yığın İzi"
+                               FontWeight="Bold" FontSize="12"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               Margin="0,0,0,4" />
+
+                    <TextBox Text="{Binding SelectedEntryDetailText, Mode=OneWay}"
+                             IsReadOnly="True"
+                             FontFamily="Consolas"
+                             FontSize="11.5"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="{DynamicResource PrimaryTextBrush}" />
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <!-- 3. Alt Durum Çubuğu -->
+        <Border Grid.Row="3"
+                BorderBrush="{DynamicResource BorderSubtleBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="2,8,2,0"
+                Margin="0,8,0,0">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <TextBlock Text="{Binding DisplayedCount, StringFormat='Gösterilen: {0}'}"
+                               FontWeight="SemiBold" Margin="0,0,8,0" FontSize="11.5" />
+                    <TextBlock Text="{Binding TotalCount, StringFormat='/ Toplam: {0} Kayıt'}"
+                               Foreground="{DynamicResource MutedTextBrush}" Margin="0,0,16,0" FontSize="11.5" />
+                    <TextBlock Text="{Binding LogDirectory, StringFormat='Log Dizini: {0}'}"
+                               Foreground="{DynamicResource MutedTextBrush}" FontSize="11" />
+                </StackPanel>
+
+                <TextBlock Text="{Binding StatusMessage}"
+                           FontWeight="Medium"
+                           Foreground="{DynamicResource AccentBrush}"
+                           FontSize="11.5" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>
