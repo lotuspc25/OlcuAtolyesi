@@ -100,7 +100,7 @@ public sealed class CameraStreamClient : ICameraStreamClient
             _httpClient?.Dispose();
             _httpClient = new HttpClient
             {
-                Timeout = Timeout.InfiniteTimeSpan
+                Timeout = TimeSpan.FromSeconds(8)
             };
         }
 
