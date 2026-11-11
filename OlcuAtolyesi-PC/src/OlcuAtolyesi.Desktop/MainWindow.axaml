@@ -237,7 +237,7 @@
                                 <TextBlock Text="Wi-Fi MJPEG Kamera Servisi ve Uzaktan Fotoğraf Çekimi" FontSize="16" FontWeight="Bold" Foreground="#F0F5FA" />
                                 <TextBlock Text="Ölçü Atölyesi Android uygulamasındaki 'PC Kamera Bağlantısı' ekranında gösterilen IP ve PIN kodunu giriniz." FontSize="12.5" Foreground="#A3B3C6" />
 
-                                <Grid ColumnDefinitions="*,10,120,10,120,10,Auto">
+                                <Grid ColumnDefinitions="*,10,100,10,110,10,Auto,8,Auto">
                                     <StackPanel Grid.Column="0" Spacing="4">
                                         <TextBlock Text="Telefon IP Adresi" FontSize="11" Foreground="#77889B" />
                                         <TextBox Text="{Binding PhoneIp}" Padding="8,6" CornerRadius="6" />
@@ -250,12 +250,39 @@
                                         <TextBlock Text="PIN Kodu" FontSize="11" Foreground="#77889B" />
                                         <TextBox Text="{Binding PhonePin}" Padding="8,6" CornerRadius="6" />
                                     </StackPanel>
-                                    <Button Grid.Column="6" Content="Yayına Bağlan" Command="{Binding TestPhoneConnectionCommand}"
+                                    <Button Grid.Column="6" Content="▶ Canlı Yayına Bağlan" Command="{Binding ConnectCameraStreamCommand}"
+                                            IsVisible="{Binding !IsStreaming}"
                                             VerticalAlignment="Bottom" Background="#0E9AA7" Foreground="#0F141A" FontWeight="Bold" CornerRadius="6" Padding="14,8" />
+                                    <Button Grid.Column="6" Content="⏹ Yayını Kes" Command="{Binding DisconnectCameraStreamCommand}"
+                                            IsVisible="{Binding IsStreaming}"
+                                            VerticalAlignment="Bottom" Background="#D9534F" Foreground="#FFFFFF" FontWeight="Bold" CornerRadius="6" Padding="14,8" />
+                                    <Button Grid.Column="8" Content="📸 Bu Kareyi Yakala ve Ölç" Command="{Binding CaptureCurrentFrameCommand}"
+                                            IsVisible="{Binding HasLiveFrame}"
+                                            VerticalAlignment="Bottom" Background="#4CE095" Foreground="#0F141A" FontWeight="Bold" CornerRadius="6" Padding="14,8" />
                                 </Grid>
 
-                                <Border Background="#151C24" BorderBrush="#2B394A" BorderThickness="1" CornerRadius="6" Padding="14">
+                                <Border Background="#151C24" BorderBrush="#2B394A" BorderThickness="1" CornerRadius="6" Padding="12">
                                     <TextBlock Text="{Binding PhoneStatusText}" FontSize="12" Foreground="#F0F5FA" TextWrapping="Wrap" />
+                                </Border>
+
+                                <!-- Canlı Video Önizleme Alanı -->
+                                <Border Background="#0D1117" BorderBrush="#2B394A" BorderThickness="1" CornerRadius="8" MinHeight="380" MaxHeight="520" ClipToBounds="True">
+                                    <Panel>
+                                        <!-- Canlı Video Yokken Gösterilecek Bilgi -->
+                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8" IsVisible="{Binding !HasLiveFrame}">
+                                            <TextBlock Text="📷" FontSize="42" HorizontalAlignment="Center" Foreground="#4B5E75" />
+                                            <TextBlock Text="Canlı Kamera Görüntüsü Bekleniyor..." FontSize="14" FontWeight="SemiBold" Foreground="#9AB0C7" HorizontalAlignment="Center" />
+                                            <TextBlock Text="Telefonda 'Sunucuyu Başlat' açıkken '▶ Canlı Yayına Bağlan' butonuna basınız." FontSize="12" Foreground="#65778B" HorizontalAlignment="Center" />
+                                        </StackPanel>
+
+                                        <!-- Canlı Kamera Görüntüsü -->
+                                        <Image Source="{Binding LiveFrameSource}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding HasLiveFrame}" />
+
+                                        <!-- Canlı Yayın Rozeti -->
+                                        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12" Background="#D9534F" CornerRadius="4" Padding="8,4" IsVisible="{Binding IsStreaming}">
+                                            <TextBlock Text="● CANLI YAYIN" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF" />
+                                        </Border>
+                                    </Panel>
                                 </Border>
                             </StackPanel>
                         </Border>
@@ -315,10 +342,13 @@
                         </Border>
 
                         <!-- Ana Ölçüm Tuvali -->
-                        <Border Background="#121820" BorderBrush="#2B394A" BorderThickness="1" CornerRadius="8" Height="360" ClipToBounds="True">
+                        <Border Background="#121820" BorderBrush="#2B394A" BorderThickness="1" CornerRadius="8" Height="400" ClipToBounds="True">
                             <Panel>
-                                <!-- Arka Plan Izgara Çizgileri -->
-                                <Border BorderBrush="#1B2430" BorderThickness="1" Margin="16" CornerRadius="6">
+                                <!-- Arka Plan Fotoğrafı (Kameradan Yakalanan veya Yüklenen Fotoğraf) -->
+                                <Image Source="{Binding MeasurementPhotoSource}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding HasMeasurementPhoto}" />
+
+                                <!-- Arka Plan Izgara Çizgileri (Fotoğraf yokken) -->
+                                <Border BorderBrush="#1B2430" BorderThickness="1" Margin="16" CornerRadius="6" IsVisible="{Binding !HasMeasurementPhoto}">
                                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="6">
                                         <TextBlock Text="Ölçüm Alanı (R1-R2 Referans / M1-M2 Ölçüm)" FontSize="15" FontWeight="Bold" Foreground="#2B394A" HorizontalAlignment="Center" />
                                         <TextBlock Text="Mavi Hat: Referans | Sarı Hat: Ölçülen Parça" FontSize="11.5" Foreground="#283240" HorizontalAlignment="Center" />

@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
 using System.Runtime.InteropServices;
+using Avalonia.Media.Imaging;
 using OlcuAtolyesi.Core;
 using OlcuAtolyesi.Core.Diagnostics;
 using OlcuAtolyesi.Core.Export;
@@ -90,11 +92,19 @@ public sealed class DesktopMainViewModel : ObservableObject
     private bool _filterEdgeDetection = false;
 
     // Telefon Bağlantısı
+    private readonly CameraStreamClient _cameraClient = new();
     private string _phoneIp = "192.168.1.3";
     private int _phonePort = 8088;
-    private string _phonePin = "123456";
+    private string _phonePin = "538147";
     private string _phoneStatusText = "Telefon bekleniyor (Wi-Fi MJPEG veya USB ADB)";
     private bool _isPhoneConnecting;
+    private bool _isStreaming;
+    private bool _hasLiveFrame;
+    private Bitmap? _liveFrameSource;
+    private byte[]? _lastFrameBytes;
+    private Bitmap? _measurementPhotoSource;
+    private bool _hasMeasurementPhoto;
+    private int _frameCount;
 
     // Projeler
     private string _newProjectName = "Debian-Ölçüm-Projesi-1";
@@ -119,7 +129,15 @@ public sealed class DesktopMainViewModel : ObservableObject
         SetDemoCardPointsCommand = new RelayCommand(SetDemoCardPoints);
         SetDemoA4PointsCommand = new RelayCommand(SetDemoA4Points);
         ExportDxfCommand = new RelayCommand(ExportCurrentMeasurementDxf);
-        TestPhoneConnectionCommand = new RelayCommand(async () => await TestPhoneConnectionAsync());
+        // Kamera İstemcisi Olayları
+        _cameraClient.FrameReceived += OnCameraFrameReceived;
+        _cameraClient.StatusChanged += (_, s) => PhoneStatusText = s;
+        _cameraClient.ErrorOccurred += (_, e) => PhoneStatusText = $"Yayın Hatası: {e}";
+        _cameraClient.ConnectionStateChanged += (_, connected) => IsStreaming = connected;
+
+        ConnectCameraStreamCommand = new RelayCommand(async () => await ConnectCameraStreamAsync());
+        DisconnectCameraStreamCommand = new RelayCommand(async () => await DisconnectCameraStreamAsync());
+        CaptureCurrentFrameCommand = new RelayCommand(CaptureCurrentFrame);
         ProbeAdbCommand = new RelayCommand(async () => await ProbeAdbStatusAsync());
         CreateProjectCommand = new RelayCommand(CreateProject);
         RefreshProjectsCommand = new RelayCommand(LoadProjects);
@@ -482,52 +500,139 @@ public sealed class DesktopMainViewModel : ObservableObject
     }
     #endregion
 
-    #region Telefon Kamera Bağlantısı
+    #region Telefon Kamera Bağlantısı & Canlı Video Akışı
     public string PhoneIp { get => _phoneIp; set => SetProperty(ref _phoneIp, value); }
     public int PhonePort { get => _phonePort; set => SetProperty(ref _phonePort, value); }
     public string PhonePin { get => _phonePin; set => SetProperty(ref _phonePin, value); }
     public string PhoneStatusText { get => _phoneStatusText; set => SetProperty(ref _phoneStatusText, value); }
     public bool IsPhoneConnecting { get => _isPhoneConnecting; set => SetProperty(ref _isPhoneConnecting, value); }
+    public bool IsStreaming { get => _isStreaming; set => SetProperty(ref _isStreaming, value); }
+    public bool HasLiveFrame { get => _hasLiveFrame; set => SetProperty(ref _hasLiveFrame, value); }
 
-    public RelayCommand TestPhoneConnectionCommand { get; }
+    public Bitmap? LiveFrameSource
+    {
+        get => _liveFrameSource;
+        private set => SetProperty(ref _liveFrameSource, value);
+    }
+
+    public Bitmap? MeasurementPhotoSource
+    {
+        get => _measurementPhotoSource;
+        set
+        {
+            if (SetProperty(ref _measurementPhotoSource, value))
+            {
+                HasMeasurementPhoto = value != null;
+            }
+        }
+    }
+
+    public bool HasMeasurementPhoto
+    {
+        get => _hasMeasurementPhoto;
+        set => SetProperty(ref _hasMeasurementPhoto, value);
+    }
+
+    public RelayCommand ConnectCameraStreamCommand { get; }
+    public RelayCommand DisconnectCameraStreamCommand { get; }
+    public RelayCommand CaptureCurrentFrameCommand { get; }
     public RelayCommand ProbeAdbCommand { get; }
 
-    private async Task TestPhoneConnectionAsync()
+    private void OnCameraFrameReceived(object? sender, byte[] frameBytes)
+    {
+        _lastFrameBytes = frameBytes;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            try
+            {
+                using var ms = new MemoryStream(frameBytes);
+                var old = _liveFrameSource;
+                LiveFrameSource = new Bitmap(ms);
+                old?.Dispose();
+                HasLiveFrame = true;
+                _frameCount++;
+                if (_frameCount % 10 == 0)
+                {
+                    StatusMessage = $"Canlı kamera akışı: {_frameCount} kare alındı (Port: {PhonePort})";
+                }
+            }
+            catch
+            {
+            }
+        });
+    }
+
+    private async Task ConnectCameraStreamAsync()
     {
         IsPhoneConnecting = true;
-        PhoneStatusText = $"Telefon kamerasına bağlanılıyor: http://{PhoneIp}:{PhonePort} ...";
+        PhoneStatusText = $"Canlı kamera akışına bağlanılıyor: http://{PhoneIp}:{PhonePort}/stream ...";
+        StatusMessage = "Kamera akışına bağlanılıyor...";
         try
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(4) };
-            if (!string.IsNullOrWhiteSpace(PhonePin))
+            var serverUrl = $"http://{PhoneIp}:{PhonePort}";
+            var result = await _cameraClient.ConnectAsync(serverUrl, PhonePin);
+            if (result.Success)
             {
-                client.DefaultRequestHeaders.Add("X-Session-Pin", PhonePin.Trim());
-            }
-
-            var url = string.IsNullOrWhiteSpace(PhonePin)
-                ? $"http://{PhoneIp}:{PhonePort}/status"
-                : $"http://{PhoneIp}:{PhonePort}/status?pin={PhonePin.Trim()}";
-
-            var response = await client.GetAsync(url);
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                PhoneStatusText = $"Bağlantı Başarılı! Telefon kamerası aktif (HTTP {response.StatusCode})\n{content}";
-                StatusMessage = "Telefondan canlı yayın hazır.";
+                PhoneStatusText = $"Canlı yayın aktif! (http://{PhoneIp}:{PhonePort}/stream)";
+                StatusMessage = "Canlı kamera önizlemesi devrede.";
+                IsStreaming = true;
             }
             else
             {
-                PhoneStatusText = $"Telefondan yanıt alındı fakat durum kodu: {response.StatusCode} (PIN kodunu kontrol ediniz)";
+                var detail = string.IsNullOrWhiteSpace(result.ErrorDetail) ? "" : $" ({result.ErrorDetail})";
+                PhoneStatusText = $"Bağlantı kurulamadı: {result.Message}{detail}";
+                StatusMessage = "Kamera bağlantısı başarısız.";
             }
         }
         catch (Exception ex)
         {
-            PhoneStatusText = $"Bağlantı kurulamadı: {ex.Message}\n(Telefon ekranında 'Sunucuyu Başlat' butonuna basıldığından ve Port'un 8088 olduğundan emin olunuz)";
-            StatusMessage = "Telefon bağlantı testi başarısız.";
+            PhoneStatusText = $"Bağlantı hatası: {ex.Message}";
+            StatusMessage = "Hata oluştu.";
         }
         finally
         {
             IsPhoneConnecting = false;
+        }
+    }
+
+    private async Task DisconnectCameraStreamAsync()
+    {
+        await _cameraClient.DisconnectAsync();
+        IsStreaming = false;
+        HasLiveFrame = false;
+        LiveFrameSource = null;
+        PhoneStatusText = "Yayın bağlantısı kesildi.";
+        StatusMessage = "Yayın durduruldu.";
+    }
+
+    private void CaptureCurrentFrame()
+    {
+        if (_lastFrameBytes is not null && _lastFrameBytes.Length > 0)
+        {
+            try
+            {
+                using var ms = new MemoryStream(_lastFrameBytes);
+                var old = _measurementPhotoSource;
+                MeasurementPhotoSource = new Bitmap(ms);
+                old?.Dispose();
+                SelectedModuleId = ModuleId.PhotoMeasurement;
+                StatusMessage = "Canlı kamera karesi donduruldu ve Fotoğraftan Ölçüm tuvaline aktarıldı.";
+                return;
+            }
+            catch
+            {
+            }
+        }
+
+        if (LiveFrameSource is not null)
+        {
+            MeasurementPhotoSource = LiveFrameSource;
+            SelectedModuleId = ModuleId.PhotoMeasurement;
+            StatusMessage = "Canlı kamera karesi donduruldu ve Fotoğraftan Ölçüm tuvaline aktarıldı.";
+        }
+        else
+        {
+            StatusMessage = "Yakalanacak aktif kamera karesi yok.";
         }
     }
 
