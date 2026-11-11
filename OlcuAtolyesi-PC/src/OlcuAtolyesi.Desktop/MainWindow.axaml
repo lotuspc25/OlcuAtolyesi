@@ -1,0 +1,395 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:OlcuAtolyesi.Desktop.ViewModels"
+        x:Class="OlcuAtolyesi.Desktop.MainWindow"
+        x:DataType="vm:DesktopMainViewModel"
+        Title="{Binding AppTitle}"
+        Width="1180" Height="760"
+        MinWidth="960" MinHeight="620"
+        WindowStartupLocation="CenterScreen"
+        Background="#181825"
+        Foreground="#CDD6F4">
+
+    <Grid ColumnDefinitions="260,*" RowDefinitions="*,34">
+        <!-- SOL MENÜ / SIDEBAR -->
+        <Border Grid.Row="0" Grid.Column="0" Background="#11111B" BorderBrush="#313244" BorderThickness="0,0,1,0">
+            <DockPanel Margin="16,20,16,16">
+                <!-- Üst Logo ve Başlık -->
+                <StackPanel DockPanel.Dock="Top" Spacing="6" Margin="0,0,0,24">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="📐" FontSize="26" VerticalAlignment="Center" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Ölçü Atölyesi" FontSize="18" FontWeight="Bold" Foreground="#89B4FA" />
+                            <TextBlock Text="Çapraz Masaüstü" FontSize="11" Foreground="#A6ADC8" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Platform Rozeti (Linux / Windows) -->
+                    <Border Background="#1E1E2E" BorderBrush="#89B4FA" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,8,0,0">
+                        <TextBlock Text="{Binding PlatformBadge}" FontSize="11" FontWeight="SemiBold" Foreground="#A6E3A1" HorizontalAlignment="Center" />
+                    </Border>
+                </StackPanel>
+
+                <!-- Alt Sistem Bilgisi -->
+                <Border DockPanel.Dock="Bottom" Background="#1E1E2E" CornerRadius="8" Padding="12" Margin="0,16,0,0">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Çalışma Ortamı" FontSize="11" FontWeight="Bold" Foreground="#BAC2DE" />
+                        <TextBlock Text="{Binding OsDescription}" FontSize="10" Foreground="#6C7086" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding MachineUser}" FontSize="10" Foreground="#89B4FA" Margin="0,2,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Navigasyon Butonları -->
+                <ScrollViewer>
+                    <StackPanel Spacing="6">
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10"
+                                CornerRadius="8" Background="{Binding IsDashboardTab, ConverterParameter=#313244}"
+                                Command="{Binding SelectTabCommand}" CommandParameter="0">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="📊" FontSize="14" />
+                                <TextBlock Text="Genel Bakış" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10"
+                                CornerRadius="8"
+                                Command="{Binding SelectTabCommand}" CommandParameter="1">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="📏" FontSize="14" />
+                                <TextBlock Text="Fotoğraftan Ölçüm" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10"
+                                CornerRadius="8"
+                                Command="{Binding SelectTabCommand}" CommandParameter="2">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="📱" FontSize="14" />
+                                <TextBlock Text="Telefon Kamera Yayını" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10"
+                                CornerRadius="8"
+                                Command="{Binding SelectTabCommand}" CommandParameter="3">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="📁" FontSize="14" />
+                                <TextBlock Text="Projeler" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10"
+                                CornerRadius="8"
+                                Command="{Binding SelectTabCommand}" CommandParameter="4">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="🖥️" FontSize="14" />
+                                <TextBlock Text="Teşhis Konsolu" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,10"
+                                CornerRadius="8"
+                                Command="{Binding SelectTabCommand}" CommandParameter="5">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="⚙️" FontSize="14" />
+                                <TextBlock Text="Ayarlar &amp; Bilgi" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+
+        <!-- SAĞ ANA İÇERİK ALANI -->
+        <Border Grid.Row="0" Grid.Column="1" Background="#181825" Padding="24">
+            <Panel>
+                <!-- 0. GENEL BAKIŞ (DASHBOARD) -->
+                <ScrollViewer IsVisible="{Binding IsDashboardTab}">
+                    <StackPanel Spacing="16">
+                        <!-- Hoş Geldiniz Kartı -->
+                        <Border Background="#1E1E2E" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="20">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Ölçü Atölyesi Çapraz Masaüstü Çalışma Alanı" FontSize="20" FontWeight="Bold" Foreground="#F5E0DC" />
+                                <TextBlock Text="Bu sürüm hem Windows hem de Linux (Debian 10/11/12, Ubuntu vb.) üzerinde emülatör veya sanal makine gerektirmeden doğrudan yerel çalışmak üzere Avalonia UI ve .NET 10 ile geliştirilmiştir."
+                                           FontSize="13" Foreground="#BAC2DE" TextWrapping="Wrap" />
+                                <WrapPanel Margin="0,8,0,0">
+                                    <Border Background="#313244" CornerRadius="6" Padding="10,4" Margin="0,0,8,4">
+                                        <TextBlock Text="{Binding FrameworkDescription, StringFormat='Çalışma Zamanı: {0}'}" FontSize="11" Foreground="#A6E3A1" />
+                                    </Border>
+                                    <Border Background="#313244" CornerRadius="6" Padding="10,4" Margin="0,0,8,4">
+                                        <TextBlock Text="{Binding Architecture, StringFormat='Mimari: {0}'}" FontSize="11" Foreground="#89B4FA" />
+                                    </Border>
+                                    <Border Background="#313244" CornerRadius="6" Padding="10,4" Margin="0,0,8,4">
+                                        <TextBlock Text="OlcuAtolyesi.Core: Etkin" FontSize="11" Foreground="#F9E2AF" />
+                                    </Border>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Hızlı Eylem Kartları -->
+                        <TextBlock Text="Modüller ve Hızlı İşlemler" FontSize="16" FontWeight="SemiBold" Foreground="#CDD6F4" />
+                        <Grid ColumnDefinitions="*,12,*,12,*">
+                            <Border Grid.Column="0" Background="#1E1E2E" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="16">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="📏 Fotoğraftan Ölçüm" FontSize="14" FontWeight="Bold" Foreground="#89B4FA" />
+                                    <TextBlock Text="R1-R2 referans kalibrasyonu ve M1-M2 parça ölçümü yapın." FontSize="12" Foreground="#A6ADC8" TextWrapping="Wrap" />
+                                    <Button Content="Ölçüme Git →" Command="{Binding SelectTabCommand}" CommandParameter="1" Background="#313244" CornerRadius="6" Padding="10,6" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2" Background="#1E1E2E" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="16">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="📱 Telefon Yayını" FontSize="14" FontWeight="Bold" Foreground="#A6E3A1" />
+                                    <TextBlock Text="Wi-Fi üzerinden telefon kamerasını masaüstüne canlı aktarın." FontSize="12" Foreground="#A6ADC8" TextWrapping="Wrap" />
+                                    <Button Content="Yayına Bağlan →" Command="{Binding SelectTabCommand}" CommandParameter="2" Background="#313244" CornerRadius="6" Padding="10,6" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="4" Background="#1E1E2E" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="16">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="📁 Kayıtlı Projeler" FontSize="14" FontWeight="Bold" Foreground="#F9E2AF" />
+                                    <TextBlock Text="Ölçüm sonuçlarını saklayın, DXF ve CAD formatında dışa aktarın." FontSize="12" Foreground="#A6ADC8" TextWrapping="Wrap" />
+                                    <Button Content="Projeleri Aç →" Command="{Binding SelectTabCommand}" CommandParameter="3" Background="#313244" CornerRadius="6" Padding="10,6" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Linux Debian Özel Notu -->
+                        <Border Background="#181825" BorderBrush="#45475A" BorderThickness="1" CornerRadius="8" Padding="14">
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="💡 Linux Debian Çalıştırma İpucu" FontWeight="Bold" Foreground="#FAB387" />
+                                <TextBlock Text="Debian sanal makinenizde bu programı çalıştırmak için 'sudo apt install libgl1-mesa-glx libssl-dev' kurulu olmalıdır. Masaüstü dosya yöneticisinde sağ tıklayıp 'Çalıştır' diyebilir veya terminalden './OlcuAtolyesi.Desktop' yazabilirsiniz."
+                                           FontSize="12" Foreground="#BAC2DE" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- 1. FOTOĞRAFTAN ÖLÇÜM (MEASURE) -->
+                <ScrollViewer IsVisible="{Binding IsMeasureTab}">
+                    <StackPanel Spacing="16">
+                        <!-- Üst Ayar Çubuğu -->
+                        <Border Background="#1E1E2E" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <StackPanel Spacing="12">
+                                <DockPanel>
+                                    <TextBlock Text="Fotoğraf Üzerinde Referanslı Mesafe Ölçümü" FontSize="16" FontWeight="Bold" Foreground="#89B4FA" VerticalAlignment="Center" />
+                                    <StackPanel Orientation="Horizontal" Spacing="8" DockPanel.Dock="Right">
+                                        <Button Content="Demo: Banka Kartı (85.6 mm)" Command="{Binding SetDemoCardPointsCommand}" Background="#313244" CornerRadius="6" Padding="8,4" />
+                                        <Button Content="Demo: A4 (210 mm)" Command="{Binding SetDemoA4PointsCommand}" Background="#313244" CornerRadius="6" Padding="8,4" />
+                                        <Button Content="📐 DXF Olarak Kaydet" Command="{Binding ExportDxfCommand}" Background="#A6E3A1" Foreground="#11111B" FontWeight="Bold" CornerRadius="6" Padding="10,4" />
+                                    </StackPanel>
+                                </DockPanel>
+
+                                <Grid ColumnDefinitions="*,*,*,*">
+                                    <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,8,0">
+                                        <TextBlock Text="Referans Nesnesi" FontSize="11" Foreground="#A6ADC8" />
+                                        <TextBox Text="{Binding SelectedReferenceObjectName}" Padding="6,4" CornerRadius="6" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" Spacing="4" Margin="0,0,8,0">
+                                        <TextBlock Text="Referans Uzunluğu (mm)" FontSize="11" Foreground="#A6ADC8" />
+                                        <NumericUpDown Value="{Binding KnownReferenceLength}" Minimum="0.1" Maximum="10000" Increment="1" Padding="6,4" CornerRadius="6" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" Spacing="4" Margin="0,0,8,0">
+                                        <TextBlock Text="Piksel Başına Ölçek" FontSize="11" Foreground="#A6ADC8" />
+                                        <TextBlock Text="{Binding ScaleMmPerPixel, StringFormat='{}{0:F4} mm/px'}" FontSize="14" FontWeight="Bold" Foreground="#F9E2AF" VerticalAlignment="Center" Margin="0,6,0,0" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="3" Spacing="4">
+                                        <TextBlock Text="Hesaplanan Ölçüm (M1–M2)" FontSize="11" Foreground="#A6ADC8" />
+                                        <TextBlock Text="{Binding CalculatedResultText}" FontSize="15" FontWeight="Bold" Foreground="#A6E3A1" VerticalAlignment="Center" Margin="0,4,0,0" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Ölçüm Görsel Tuvali (Canvas) -->
+                        <Border Background="#11111B" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Height="360" ClipToBounds="True">
+                            <Panel>
+                                <!-- Izgara Arka Planı -->
+                                <Border BorderBrush="#1E1E2E" BorderThickness="1" Margin="20" CornerRadius="6">
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
+                                        <TextBlock Text="Ölçüm Tuvali (R1-R2 Referans / M1-M2 Ölçüm)" FontSize="15" FontWeight="Bold" Foreground="#45475A" HorizontalAlignment="Center" />
+                                        <TextBlock Text="Mavi Çizgi: Bilinen Referans | Sarı Çizgi: Parça Ölçümü" FontSize="12" Foreground="#313244" HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Temsili Ölçüm Çizgileri ve Noktalar -->
+                                <Canvas>
+                                    <!-- Referans Çizgisi R1 - R2 (Mavi) -->
+                                    <Line StartPoint="150,260" EndPoint="550,260" Stroke="#89B4FA" StrokeThickness="3" />
+                                    <Ellipse Canvas.Left="142" Canvas.Top="252" Width="16" Height="16" Fill="#89B4FA" />
+                                    <TextBlock Canvas.Left="138" Canvas.Top="230" Text="R1" FontWeight="Bold" Foreground="#89B4FA" />
+                                    <Ellipse Canvas.Left="542" Canvas.Top="252" Width="16" Height="16" Fill="#89B4FA" />
+                                    <TextBlock Canvas.Left="540" Canvas.Top="230" Text="R2" FontWeight="Bold" Foreground="#89B4FA" />
+                                    <TextBlock Canvas.Left="300" Canvas.Top="268" Text="Referans (85.60 mm)" FontSize="11" Foreground="#89B4FA" />
+
+                                    <!-- Ölçüm Çizgisi M1 - M2 (Sarı) -->
+                                    <Line StartPoint="150,140" EndPoint="750,140" Stroke="#F9E2AF" StrokeThickness="3" StrokeDashArray="4,2" />
+                                    <Ellipse Canvas.Left="142" Canvas.Top="132" Width="16" Height="16" Fill="#F9E2AF" />
+                                    <TextBlock Canvas.Left="138" Canvas.Top="110" Text="M1" FontWeight="Bold" Foreground="#F9E2AF" />
+                                    <Ellipse Canvas.Left="742" Canvas.Top="132" Width="16" Height="16" Fill="#F9E2AF" />
+                                    <TextBlock Canvas.Left="740" Canvas.Top="110" Text="M2" FontWeight="Bold" Foreground="#F9E2AF" />
+                                    <Border Canvas.Left="400" Canvas.Top="105" Background="#1E1E2E" BorderBrush="#F9E2AF" BorderThickness="1" CornerRadius="4" Padding="6,2">
+                                        <TextBlock Text="{Binding CalculatedResultText}" FontSize="12" FontWeight="Bold" Foreground="#F9E2AF" />
+                                    </Border>
+                                </Canvas>
+                            </Panel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- 2. TELEFON KAMERA BAĞLANTISI (PHONE) -->
+                <ScrollViewer IsVisible="{Binding IsPhoneTab}">
+                    <StackPanel Spacing="16">
+                        <Border Background="#1E1E2E" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="20">
+                            <StackPanel Spacing="14">
+                                <TextBlock Text="Android Telefon Kamera Yayını (Wi-Fi MJPEG &amp; ADB)" FontSize="18" FontWeight="Bold" Foreground="#A6E3A1" />
+                                <TextBlock Text="Ölçü Atölyesi Android uygulamasındaki 'PC Kamera Bağlantısı' ekranını açıp telefonun ekranda gösterdiği IP adresini buraya giriniz."
+                                           FontSize="13" Foreground="#BAC2DE" TextWrapping="Wrap" />
+
+                                <Grid ColumnDefinitions="*,12,120,12,140,12,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="4">
+                                        <TextBlock Text="Telefon IP Adresi" FontSize="11" Foreground="#A6ADC8" />
+                                        <TextBox Text="{Binding PhoneIp}" Padding="8,6" CornerRadius="6" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2" Spacing="4">
+                                        <TextBlock Text="Port" FontSize="11" Foreground="#A6ADC8" />
+                                        <TextBox Text="{Binding PhonePort}" Padding="8,6" CornerRadius="6" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="4" Spacing="4">
+                                        <TextBlock Text="Oturum PIN Kodu" FontSize="11" Foreground="#A6ADC8" />
+                                        <TextBox Text="{Binding PhonePin}" Padding="8,6" CornerRadius="6" />
+                                    </StackPanel>
+
+                                    <Button Grid.Column="6" Content="Bağlantıyı Test Et" Command="{Binding TestPhoneConnectionCommand}"
+                                            VerticalAlignment="Bottom" Background="#89B4FA" Foreground="#11111B" FontWeight="Bold" CornerRadius="6" Padding="14,9" />
+                                </Grid>
+
+                                <!-- Bağlantı Durumu Kartı -->
+                                <Border Background="#11111B" BorderBrush="#313244" BorderThickness="1" CornerRadius="8" Padding="14">
+                                    <StackPanel Spacing="6">
+                                        <TextBlock Text="Bağlantı &amp; Cihaz Durumu:" FontSize="11" FontWeight="Bold" Foreground="#89B4FA" />
+                                        <TextBlock Text="{Binding PhoneStatusText}" FontSize="12" Foreground="#CDD6F4" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+
+                                <DockPanel Margin="0,8,0,0">
+                                    <Button Content="ADB Cihazlarını Yeniden Tara" Command="{Binding ProbeAdbCommand}"
+                                            Background="#313244" CornerRadius="6" Padding="10,6" />
+                                </DockPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- 3. PROJELER (PROJECTS) -->
+                <ScrollViewer IsVisible="{Binding IsProjectsTab}">
+                    <StackPanel Spacing="16">
+                        <Border Background="#1E1E2E" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="20">
+                            <StackPanel Spacing="12">
+                                <DockPanel>
+                                    <TextBlock Text="Kayıtlı Ölçüm Projeleri" FontSize="18" FontWeight="Bold" Foreground="#F9E2AF" />
+                                    <Button DockPanel.Dock="Right" Content="Yenile" Command="{Binding RefreshProjectsCommand}" Background="#313244" CornerRadius="6" Padding="10,4" />
+                                </DockPanel>
+                                <TextBlock Text="{Binding ProjectStatusMessage}" FontSize="12" Foreground="#A6ADC8" />
+
+                                <Grid ColumnDefinitions="*,12,Auto" Margin="0,8,0,0">
+                                    <TextBox Grid.Column="0" Text="{Binding NewProjectName}" PlaceholderText="Yeni proje adı..." CornerRadius="6" Padding="8,6" />
+                                    <Button Grid.Column="2" Content="+ Yeni Proje Oluştur" Command="{Binding CreateProjectCommand}"
+                                            Background="#A6E3A1" Foreground="#11111B" FontWeight="Bold" CornerRadius="6" Padding="12,6" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Proje Listesi -->
+                        <Border Background="#1E1E2E" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="16">
+                            <ItemsControl ItemsSource="{Binding Projects}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#11111B" BorderBrush="#313244" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                            <DockPanel>
+                                                <TextBlock DockPanel.Dock="Right" Text="{Binding UpdatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" FontSize="11" Foreground="#6C7086" VerticalAlignment="Center" />
+                                                <StackPanel Spacing="4">
+                                                    <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="Bold" Foreground="#CDD6F4" />
+                                                    <TextBlock Text="{Binding MeasuredLength, StringFormat='Ölçülen: {0}'}" FontSize="12" Foreground="#89B4FA" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- 4. TEŞHİS KONSOLU (DIAGNOSTICS) -->
+                <ScrollViewer IsVisible="{Binding IsDiagnosticsTab}">
+                    <StackPanel Spacing="16">
+                        <Border Background="#1E1E2E" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="20">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="Günlükleri Temizle" Command="{Binding ClearLogsCommand}" Background="#F38BA8" Foreground="#11111B" FontWeight="Bold" CornerRadius="6" Padding="10,6" />
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Merkezi Teşhis ve Sistem Günlükleri" FontSize="18" FontWeight="Bold" Foreground="#F5E0DC" />
+                                    <TextBlock Text="Uygulama içi olaylar, donanım kontrolleri ve Linux sistem tanılama kayıtları." FontSize="12" Foreground="#A6ADC8" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <Border Background="#11111B" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="12" MinHeight="300">
+                            <ItemsControl ItemsSource="{Binding Logs}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#1E1E2E" BorderThickness="0,0,0,1" Padding="6,4">
+                                            <DockPanel>
+                                                <TextBlock DockPanel.Dock="Left" Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}" FontSize="11" Foreground="#6C7086" Margin="0,0,10,0" />
+                                                <TextBlock DockPanel.Dock="Left" Text="{Binding Level}" FontSize="11" FontWeight="Bold" Foreground="#89B4FA" Margin="0,0,10,0" />
+                                                <TextBlock Text="{Binding Message}" FontSize="11" Foreground="#CDD6F4" TextWrapping="Wrap" />
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- 5. AYARLAR (SETTINGS) -->
+                <ScrollViewer IsVisible="{Binding IsSettingsTab}">
+                    <StackPanel Spacing="16">
+                        <Border Background="#1E1E2E" BorderBrush="#313244" BorderThickness="1" CornerRadius="10" Padding="20">
+                            <StackPanel Spacing="16">
+                                <TextBlock Text="Uygulama Ayarları ve Yapılandırma" FontSize="18" FontWeight="Bold" Foreground="#89B4FA" />
+
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Çalışma Dizini (Workspace)" FontWeight="SemiBold" Foreground="#CDD6F4" />
+                                    <TextBox Text="{Binding WorkspacePath}" IsReadOnly="True" CornerRadius="6" Padding="8,6" Background="#11111B" />
+                                    <TextBlock Text="Linux'ta ~/.local/share/OlcuAtolyesiPC/ altında, Windows'ta AppData/Local altında tutulur." FontSize="11" Foreground="#6C7086" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="Sürüm ve Dağıtım" FontWeight="SemiBold" Foreground="#CDD6F4" />
+                                    <TextBlock Text="{Binding AppTitle}" FontSize="13" Foreground="#A6E3A1" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Panel>
+        </Border>
+
+        <!-- ALT DURUM ÇUBUĞU (STATUS BAR) -->
+        <Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="#11111B" BorderBrush="#313244" BorderThickness="0,1,0,0" Padding="16,0">
+            <DockPanel VerticalAlignment="Center">
+                <TextBlock DockPanel.Dock="Right" Text="{Binding VersionText, StringFormat='Sürüm: {0}'}" FontSize="11" Foreground="#6C7086" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Ellipse Width="8" Height="8" Fill="#A6E3A1" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#BAC2DE" VerticalAlignment="Center" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

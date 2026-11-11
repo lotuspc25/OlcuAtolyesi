@@ -1,57 +1,97 @@
 # Ölçü Atölyesi PC
 
-**v0.6.7 — Sade Ana Pencere, Cetveller ve Ekran Kalibrasyonu (.NET 10 / WPF / MVVM)**
+**v0.6.8 — Sade Ana Pencere, Cetveller, Ekran Kalibrasyonu ve Kolay Dağıtım (.NET 10 / WPF / MVVM)**
 
 Ölçü Atölyesi PC, Android telefon kamerasıyla veya masaüstündeki fotoğraflarla yapılan ölçümleri kalibre edilmiş düzlemde işlemek, yerel ağ (Wi-Fi) üzerinden Ölçü Atölyesi Android Kamera Servisi'ne bağlanarak doğrudan WPF penceresi içinde akıcı kamera önizlemesi sunmak, tek dokunuşla donanımın desteklediği yüksek çözünürlükte uzaktan fotoğraf çekmek ve SHA-256 bütünlük doğrulamasıyla kayıpsız dosya aktarımı sağlamak, alternatif USB/scrcpy motorunu çalıştırmak, USB/ADB üzerinden bağlı Android telefonları denetlemek, projeleri kalıcı olarak saklamak, mobil `v0.4.0` proje paketleriyle çift yönlü paylaşmak, otomatik kontur/delik çıkarmak, **DXF / STEP / STL** CAD çıktıları üretmek, modelleri **3B baskıya** hazırlamak ve **Merkezi Tanılama Konsolu** ile PC/telefon loglarını gerçek zamanlı izlemek için geliştirilen bağımsız Windows masaüstü uygulamasıdır.
 
-> **Kapsam notu:** Aşağıdaki giriş metni ürün vizyonunu tanımlar. **Uygulanmış** özellikler için
-> §2'deki durum rozetlerine ve `PROJECT_STATUS.md`'ye bakın. **2B DXF ihracı v0.6.0 ile etkinleştirilmiştir.**
-> Otomatik kontur çıkarma, 3B STEP/STL üretimi ve 3B baskı entegrasyonu planlanan sırada
-> (`Docs/ROADMAP.md`) geliştirilecektir.
+---
+
+## 🚀 Hızlı Başlangıç: İndirme ve Çalıştırma Rehberi
+
+Uygulamayı bilgisayarınızda veya sanal makinenizde çalıştırmak için aşağıdaki yöntemlerden size en uygun olanını seçebilirsiniz:
+
+### Yöntem 1: Kurulumsuz Taşınabilir Sürüm (Önerilen — En Kolay Yol)
+> **Kimler İçin:** Bilgisayarına yazılım geliştirme araçları (.NET SDK, Python, Visual Studio vb.) kurmak istemeyen son kullanıcılar.
+
+1. GitHub deposunun sağ tarafında bulunan **[Releases (Sürümler)](https://github.com/lotuspc25/OlcuAtolyesi/releases)** sayfasına gidin.
+2. En güncel sürüm altındaki **`OlcuAtolyesi-PC-win-x64.zip`** arşivini indirin.
+3. İndirdiğiniz `.zip` arşivini istediğiniz bir klasöre çıkartın.
+4. Klasör içerisindeki **`OlcuAtolyesi.PC.exe`** dosyasına çift tıklayarak uygulamayı doğrudan başlatın!
+
+---
+
+### Yöntem 2: GitHub'dan İndirip Tek Tıkla Başlatma (`Calistir.bat`)
+> **Kimler İçin:** GitHub üzerinden kaynak kodları ZIP olarak indiren veya klonlayan kullanıcılar.
+
+1. GitHub sayfasındaki yeşil **`Code`** butonuna tıklayın ve **`Download ZIP`** seçeneği ile projeyi indirin (veya terminalden `git clone` yapın).
+2. ZIP dosyasını klasöre çıkartın.
+3. Klasör kök dizininde yer alan **`Calistir.bat`** dosyasına çift tıklayın.
+   * *Not: Kaynak kodları derleyebilmek için sisteminizde [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) kurulu olmalıdır.*
+
+---
+
+### Yöntem 3: Konsol / PowerShell Üzerinden Çalıştırma
+Kaynak kodları terminal üzerinden yönetmek isterseniz:
+
+```powershell
+# 1. Proje dizinine geçin
+cd OlcuAtolyesi-PC
+
+# 2. Bağımlılıkları geri yükleyin
+dotnet restore OlcuAtolyesi.PC.sln
+
+# 3. Uygulamayı başlatın
+dotnet run --project src/OlcuAtolyesi.PC/OlcuAtolyesi.PC.csproj
+```
+
+---
+
+### Yöntem 4: Kendi Taşınabilir Paketinizi Üretme (`Paketle.bat` & `Paketle-Linux.bat`)
+* **Windows Paketi:** Kök dizindeki **`Paketle.bat`** dosyasına çift tıklayın (`Publish/win-x64/` üretilir).
+* **Linux x64 Paketi:** Kök dizindeki **`Paketle-Linux.bat`** dosyasına çift tıklayın (`dist/linux-x64/` üretilir).
+
+---
+
+### Yöntem 5: Linux (Debian 10/11/12, Ubuntu) Üzerinde Tek Tıkla Çalıştırma (`Calistir.sh`)
+> **Kimler İçin:** Linux sanal makinesinde veya doğrudan Linux masaüstünde çalışan kullanıcılar.
+
+1. Terminalde proje dizinine geçin:
+   ```bash
+   cd OlcuAtolyesi-PC
+   ```
+2. Başlatıcıya çalıştırma yetkisi verip çalıştırın:
+   ```bash
+   chmod +x Calistir.sh
+   ./Calistir.sh
+   ```
+   * *Not: Sisteminizde .NET SDK yoksa betik otomatik olarak kullanıcı ev dizinine kuracak ve uygulamayı başlatacaktır.*
+   * *Gerekli grafik kütüphaneleri: `sudo apt install -y libgl1-mesa-glx libssl-dev libfontconfig1 libx11-6`*
 
 ---
 
 ## 1. Çözüm Mimarisi ve Klasör Yapısı
 
 ```text
-D:\proje\OlcuAtolyesi-PC
+OlcuAtolyesi-PC/
 ├── OlcuAtolyesi.PC.sln
+├── Calistir.bat                    # Tek tıkla uygulamayı başlatan betik
+├── Paketle.bat                     # Bağımsız (Self-Contained) paket üretici
 ├── AGENTS.md
 ├── PROJECT_STATUS.md
 ├── CHANGELOG.md
 ├── README.md
+├── .github/
+│   └── workflows/
+│       └── build-and-release.yml   # Otomatik derleme, test ve GitHub Release CI/CD akışı
 ├── Docs/
 │   ├── ROADMAP.md
 │   └── Reports/
-│       ├── v0.1.0_Sonuc_Raporu.md
-│       ├── v0.2.0_Sonuc_Raporu.md
-│       ├── v0.3.0_Sonuc_Raporu.md
-│       ├── v0.4.0_Sonuc_Raporu.md
-│       ├── v0.4.1_Sonuc_Raporu.md
-│       ├── v0.4.2_Sonuc_Raporu.md
-│       ├── v0.5.0_Sonuc_Raporu.md
-│       ├── v0.5.0.1_WiFi_Kamera_Duzeltme_Raporu.md
-│       ├── v0.5.0.2_Kare_Yakalama_Duzeltme_Raporu.md
-│       ├── v0.5.0.3_Ikon_Splash_Responsive_Raporu.md
-│       ├── v0.5.0.4_Kamera_Guvencesi_Ve_Tanilama_Konsolu_Raporu.md
-│       ├── v0.5.0.5_Kamera_Performansi_ve_Fotograf_Aktarimi_Raporu.md
-│       ├── v0.5.0.6_Belirtec_Yenileme_Raporu.md
-│       ├── v0.5.0.6_Dokuman_ve_Yol_Haritasi_Raporu.md
-│       ├── v0.6.0_DXF_Ihrac_Raporu.md
-│       ├── v0.6.1_Profesyonel_Cizim_Raporu.md
-│       ├── v0.6.2_Buyutec_Iyilestirmesi_Raporu.md
-│       ├── v0.6.3_Buyutec_Duzeltmesi_Raporu.md
-│       ├── v0.6.4_Olcum_Penceresi_Raporu.md
-│       ├── v0.6.5_Goruntu_Ayarlari_Raporu.md
-│       ├── v0.6.6_Ikonlar_ve_Pencere_Tasima_Raporu.md
-│       └── v0.6.7_Sade_Ana_Pencere_ve_Cetveller_Raporu.md
 ├── src/
 │   ├── OlcuAtolyesi.Core/          # Platformdan bağımsız ortak çekirdek (.NET 10)
 │   │   ├── Diagnostics/            # DiagnosticEnums, DiagnosticDataMasker, DiagnosticLogEntry, CircularDiagnosticLogger, DiagnosticLogHub
 │   │   ├── Export/                 # DxfExportModels, DxfBuilder, DxfExportService (2B DXF R12 ASCII AC1009)
 │   │   ├── Geometry/               # LengthUnit, LengthValue, ImagePoint, ImageSegment, ImageViewportTransform, ImageDisplayTransform
 │   │   ├── Measurement/            # RulerTickCalculator, ReferenceObjectLibrary, ScreenCalibration
-│   │   ├── Geometry/               # LengthUnit, LengthValue, ImagePoint, ReferenceScale, MeasurementGeometry, ImageViewportTransform, MeasurementSession, ImageDisplayTransform
 │   │   ├── Models/                 # ModuleId, ModuleDescriptor, OpenSourceCandidate, DesktopProject, ProjectMeasurementItem
 │   │   ├── Mvvm/                   # ObservableObject, RelayCommand
 │   │   ├── Phone/                  # AdbLocator, ProcessAdbCommandRunner, AdbOutputParser, UsbPhoneConnectionService, RemoteCameraContracts, ScrcpyLocator, ScrcpyOutputParser, ScrcpyProcessManager, CameraStreamClient
@@ -68,12 +108,12 @@ D:\proje\OlcuAtolyesi-PC
 │       ├── App.xaml / App.xaml.cs
 │       └── MainWindow.xaml / MainWindow.xaml.cs
 └── tests/
-    └── OlcuAtolyesi.PC.Tests/      # 54 otomatik test: başlangıç, navigasyon, geometri, fotoğraf, kalıcı proje, mobil uyumluluk, USB/ADB, scrcpy, Wi-Fi doğrudan önizleme, kare yakalama-aktarım, kurumsal kimlik/responsive düzen, döngüsel loglama, PIN maskeleme, uzaktan log alımı, uzaktan yüksek çözünürlüklü çekim, oturum belirteci 401 kurtarma, 2B DXF üretimi, adım rehberi, profesyonel çizim, gelişmiş büyüteç, kısayollar, ayrı pencere (MeasurementWindow), tersinir görüntü dönüşümü, filtre hattı, ikonlar, pencere ayrımı, cetvel taksimatı, referans kütüphanesi, ekran kalibrasyonu ve sade ana pencere kontrolleri
+    └── OlcuAtolyesi.PC.Tests/      # Otomatik mantık, geometri, navigasyon, DXF, filtre ve kalibrasyon testleri
 ```
 
 ---
 
-## 2. Sol Navigasyon Modülleri (v0.6.7)
+## 2. Sol Navigasyon Modülleri
 
 1. **Ana Panel (`Etkin • v0.5.0.5`):** Modül hazırlık durumları, özet sayaçlar ve her modüle tek tıkla geçiş kartları.
 2. **Projeler (`Etkin • v0.5.0.4`):** Kalıcı proje oluşturma, kaydetme, yeniden adlandırma, silme, atomik `project.json` + `.bak` yedeği ve mobil `v0.4.0` proje paketlerini (`.zip` / klasör / `project.json`) içe ve dışa aktarma.

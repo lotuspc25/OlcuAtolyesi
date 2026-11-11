@@ -1,10 +1,10 @@
 # Ölçü Atölyesi PC — Proje Durumu (PROJECT_STATUS.md)
 
-- **Güncel Sürüm:** `v0.6.7 — Sade Ana Pencere, Cetveller ve Ekran Kalibrasyonu`
+- **Güncel Sürüm:** `v0.6.9 — Linux Debian ve Windows Çapraz Masaüstü Desteği (Avalonia UI)`
 - **Tarih:** 2026-11-11
 - **Çalışma Klasörü:** `D:\proje\OlcuAtolyesi-PC`
-- **Teknoloji Yığını:** C# / .NET 10 / WPF (`net10.0-windows`) + `OlcuAtolyesi.Core` (`net10.0`) / MVVM
-- **Git Etiketleri:** `v0.1.0-baseline`, `v0.2.0-baseline`, `v0.3.0-baseline`, `v0.4.0-baseline`, `v0.4.1-baseline`, `v0.4.2-baseline`, `v0.5.0-baseline`, `v0.5.0.1-baseline`, `v0.5.0.2-baseline`, `v0.5.0.3-baseline`, `v0.5.0.4-baseline`, `v0.5.0.5-baseline`, `v0.5.0.6-baseline`, `v0.6.0-baseline`, `v0.6.1-baseline`, `v0.6.2-baseline`, `v0.6.3-baseline`, `v0.6.4-baseline`, `v0.6.5-baseline`, `v0.6.6-baseline`, `v0.6.7-baseline`
+- **Teknoloji Yığını:** C# / .NET 10 / WPF (`net10.0-windows`) + Avalonia UI (`net10.0` - `OlcuAtolyesi.Desktop`) + `OlcuAtolyesi.Core` (`net10.0`) / MVVM
+- **Git Etiketleri:** `v0.1.0-baseline` .. `v0.6.9-baseline`
 - **Yol Haritası:** `Docs/ROADMAP.md` — v1.0 kapsamı: zemin kalibrasyonu + perspektif düzeltme + 2B DXF ihracı
 
 ---
@@ -31,10 +31,10 @@
 
 ---
 
-## 2. Doğrulama Özeti (v0.6.7)
+## 2. Doğrulama Özeti (v0.6.8)
 
 - **Debug Derlemesi (`dotnet build -c Debug`):** `0 Uyarı, 0 Hata`
 - **Release Derlemesi (`dotnet build -c Release`):** `0 Uyarı, 0 Hata`
 - **Otomatik Testler (`OlcuAtolyesi.PC.Tests`):** `54/54` kontrol başarılı (%100).
-- **Responsive Düzen:** 920x600, 1366x768 ve 1920x1080 ekran çözünürlüklerinde doğrulandı.
+- **Dağıtım ve Başlatıcı:** `Calistir.bat` tek tık başlatıcı, `Paketle.bat` taşınabilir paket üretici ve `.github/workflows/build-and-release.yml` GitHub Actions CI/CD akışı doğrulandı.
 - **Kullanım Kuralı Doğrulaması:** Canlı cihaza müdahale edilmemiş; masaüstü uygulaması bağımsız olarak başlatılmış ve arka planda açık bırakılmıştır.

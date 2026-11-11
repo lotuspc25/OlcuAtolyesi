@@ -4,6 +4,26 @@ Bu dosya **Ölçü Atölyesi PC** (`D:\proje\OlcuAtolyesi-PC`) Windows masaüst�
 
 ---
 
+## [v0.6.9] — 2026-11-11 — Linux Debian ve Windows Çapraz Masaüstü Desteği (Avalonia UI)
+
+### Eklenenler
+- **Çapraz Platform Masaüstü Uygulaması (`OlcuAtolyesi.Desktop`):** Avalonia UI 12 ve .NET 10 ile Linux (Debian 10/11/12, Ubuntu vb.) ve Windows üzerinde yerel pencere olarak çalışan responsive masaüstü istemcisi eklendi.
+- **Linux Başlatıcı Betikleri (`Calistir.sh` & `Calistir-Linux.sh`):** Linux ortamında `dotnet` SDK kontrolü yapan, eksikse kullanıcı dizinine otomatik yükleyen ve uygulamayı doğrudan başlatan tek tık kabuk betikleri.
+- **Linux x64 Bağımsız Paketleme (`Paketle-Linux.bat`):** Windows üzerinden Linux için `self-contained` tek dosya (single-file binary) üreten dağıtım betiği.
+- **Linux Debian ve Windows Rehber Güncellemeleri:** Kök `README.md` ve PC `README.md` dosyalarına Debian terminalinden GitHub klonlama ve çalıştırma yönergeleri eklendi.
+
+---
+
+## [v0.6.8] — 2026-11-11 — GitHub İndirme, Dağıtım ve Otomatik Başlatıcı Rehberi
+
+### Eklenenler
+- **Doğrudan Başlatıcı Betiği (`Calistir.bat`):** GitHub'dan ZIP olarak indiren veya klonlayan kullanıcıların sisteminde kurulu .NET 10 SDK ile hiçbir karmaşık komut girmeden uygulamayı tek tıkla başlatmasını sağlayan dinamik yollu (`%~dp0`) Türkçe batch başlatıcı.
+- **Taşınabilir Bağımsız Paket Üretici (`Paketle.bat`):** Başka bir bilgisayara veya sanal makineye aktarmak üzere .NET SDK gerektirmeyen bağımsız (Self-Contained) tek dosya masaüstü paketini (`Publish/OlcuAtolyesi.PC.exe`) oluşturan betik.
+- **GitHub Actions CI/CD Dağıtım Akışı (`.github/workflows/build-and-release.yml`):** Kod değişikliklerinde otomatik derleme ve 54 birim/entegrasyon testini çalıştıran, etiketleme (`v*`) veya manuel tetikleme ile bağımsız `.zip` paketini derleyip GitHub Releases altında yayınlayan sürekli entegrasyon iş akışı.
+- **Kapsamlı README.md Hızlı Başlangıç Rehberi:** Son kullanıcılar için GitHub Releases'tan kurulumsuz çalıştırma, kaynak koddan `Calistir.bat` ile tek tıkla çalıştırma ve terminal komutlarını içeren adım adım Türkçe kılavuz eklendi; sabit dosya yolları göreceli yollarla güncellendi.
+
+---
+
 ## [v0.6.7] — 2026-11-11 — Sade Ana Pencere, Cetveller ve Ekran Kalibrasyonu
 
 ### Eklenenler

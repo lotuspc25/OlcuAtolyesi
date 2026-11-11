@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-blue.svg)](https://dotnet.microsoft.com/)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Android-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20Android-lightgrey.svg)]()
 
 > **Fiziksel dünyadan milimetrik CAD verisine:** Telefon kamerasından yüksek çözünürlüklü görüntü yakalama, optik referanslama ve doğrudan 2B DXF vektörel teknik çizim üretimine uzanan uçtan uca hibrit ölçüm ve sayısallaştırma ekosistemi.
 
@@ -14,9 +14,10 @@
 
 Sistem, elde edilen görüntüyü optik bozulma ve perspektif kısıtlarından arındırarak alt piksel düzeyinde işler, milimetrik koordinat düzlemine oturtur ve doğrudan CNC tezgâhlarında, lazer kesim makinelerinde veya CAD yazılımlarında (AutoCAD, SolidWorks, FreeCAD vb.) açılabilecek **standart 2B DXF (R12 ASCII)** formatına dönüştürür.
 
-Bu ekosistem iki tamamlayıcı ayaktan oluşur:
+Bu ekosistem üç tamamlayıcı ayaktan oluşur:
 1. **Saha Modu (.NET MAUI - Android):** Taşınabilir bir optik tarama ve veri toplama istasyonu.
 2. **Stüdyo Modu (WPF - Windows Masaüstü):** Görüntü işleme filtreleri, çift eksenli cetvel taksimatları, ekran kalibrasyonu ve CAD ihracı sunan masaüstü analiz stüdyosu.
+3. **Çapraz Masaüstü Modu (Avalonia UI - Linux Debian & Windows):** Sanal makine ve emülatör gerektirmeden Debian, Ubuntu ve Windows üzerinde yerel pencere olarak çalışan çapraz platform analiz arayüzü (`OlcuAtolyesi.Desktop`).
 
 ---
 
@@ -95,10 +96,16 @@ OlcuAtolyesi/
 │   └── Tests/LogicChecks/        # Mobil bağımsız matematik ve mantık testleri
 ├── OlcuAtolyesi-PC/              # Masaüstü stüdyo ve çekirdek (.NET 10)
 │   ├── src/OlcuAtolyesi.Core/    # Görünümden bağımsız saf C# geometri, ölçüm ve DXF motoru
-│   ├── src/OlcuAtolyesi.PC/      # Masaüstü WPF kullanıcı arayüzü ve görünüm modelleri
+│   ├── src/OlcuAtolyesi.PC/      # Windows masaüstü WPF kullanıcı arayüzü ve görünüm modelleri
+│   ├── src/OlcuAtolyesi.Desktop/ # Linux (Debian/Ubuntu) ve Windows Çapraz Masaüstü (Avalonia UI)
+│   ├── Calistir.bat              # Windows tek tıkla başlatıcı
+│   ├── Calistir.sh               # Linux tek tıkla başlatıcı
+│   ├── Paketle-Linux.bat         # Linux x64 bağımsız paket üretim scripti
 │   └── tests/OlcuAtolyesi.PC.Tests/ # Otomatik doğrulama testleri (54/54 Başarılı)
+├── Calistir-Linux.sh             # Kök dizin Linux başlatıcısı
 ├── Docs/
 │   ├── Images/                   # Ekran görüntüleri (mobile_preview.png, pc_workspace.png)
+│   ├── Reports/                  # Sürüm ve test doğrulama raporları
 │   └── ROADMAP.md                # Ürün vizyonu ve uzun vadeli sürüm planları
 ├── LICENSE                       # MIT Lisansı
 └── README.md                     # Ana proje tanıtım ve kullanım rehberi
@@ -108,26 +115,46 @@ OlcuAtolyesi/
 
 ## 6. Kurulum ve Çalıştırma
 
-### Gereksinimler
-- [.NET 10 SDK](https://dotnet.microsoft.com/)
-- Windows 10 / 11 (Masaüstü için)
-- Android 8.0+ / API 26+ (Mobil için)
-- Visual Studio 2022 / 2026 veya JetBrains Rider (.NET Masaüstü ve .NET MAUI iş yükleri ile)
+### A. Linux (Debian 10/11/12, Ubuntu, LinuxCNC) Üzerinde Çalıştırma
 
-### Derleme ve Test
+Linux üzerinde sanal makine veya yerel masaüstünüzde projeyi doğrudan GitHub'dan çekip çalıştırmak için:
 
-```powershell
-# Depoyu klonlayın
+```bash
+# 1. Gerekli temel sistem kütüphanelerini kurun:
+sudo apt update
+sudo apt install -y git curl libgl1-mesa-glx libssl-dev libfontconfig1 libx11-6
+
+# 2. Depoyu klonlayın ve klasöre girin:
 git clone https://github.com/lotuspc25/OlcuAtolyesi.git
 cd OlcuAtolyesi
 
-# Masaüstü Çözümünü Derleyin (Debug & Release)
-dotnet build OlcuAtolyesi-PC/OlcuAtolyesi.PC.sln -c Release
+# 3. Başlatıcıya yetki verip çalıştırın:
+chmod +x Calistir-Linux.sh
+./Calistir-Linux.sh
+```
+> *Not: Sisteminizde .NET 10 kurulu değilse, başlatıcı betik kullanıcı ev dizininize (`~/.dotnet`) otomatik olarak kurulumu tamamlayıp uygulamayı başlatacaktır.*
 
-# PC Otomatik Testlerini Çalıştırın (54/54 Başarılı)
+---
+
+### B. Windows Üzerinde Çalıştırma
+
+1. Depoyu klonlayın veya GitHub'dan ZIP olarak indirin:
+   ```powershell
+   git clone https://github.com/lotuspc25/OlcuAtolyesi.git
+   cd OlcuAtolyesi\OlcuAtolyesi-PC
+   ```
+2. Klasördeki **`Calistir.bat`** dosyasına çift tıklayarak uygulamayı başlatın.
+   *(VEYA `OlcuAtolyesi.PC.sln` çözüm dosyasını Visual Studio 2022/2026 ile açabilirsiniz).*
+
+---
+
+### C. Otomatik Testler ve Doğrulama
+
+```powershell
+# PC ve Çapraz Masaüstü Testleri (54/54 Başarılı)
 dotnet run --project OlcuAtolyesi-PC/tests/OlcuAtolyesi.PC.Tests/OlcuAtolyesi.PC.Tests.csproj -c Debug
 
-# Mobil Mantık Testlerini Çalıştırın
+# Mobil Mantık ve Geometri Testleri
 dotnet run --project OlcuAtolyesi/Tests/LogicChecks/LogicChecks.csproj -c Debug
 ```
 
