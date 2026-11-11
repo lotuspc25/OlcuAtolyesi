@@ -90,8 +90,8 @@ public sealed class DesktopMainViewModel : ObservableObject
     private bool _filterEdgeDetection = false;
 
     // Telefon Bağlantısı
-    private string _phoneIp = "192.168.1.100";
-    private int _phonePort = 8080;
+    private string _phoneIp = "192.168.1.3";
+    private int _phonePort = 8088;
     private string _phonePin = "123456";
     private string _phoneStatusText = "Telefon bekleniyor (Wi-Fi MJPEG veya USB ADB)";
     private bool _isPhoneConnecting;
@@ -498,21 +498,31 @@ public sealed class DesktopMainViewModel : ObservableObject
         PhoneStatusText = $"Telefon kamerasına bağlanılıyor: http://{PhoneIp}:{PhonePort} ...";
         try
         {
-            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
-            var response = await client.GetAsync($"http://{PhoneIp}:{PhonePort}/status");
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(4) };
+            if (!string.IsNullOrWhiteSpace(PhonePin))
+            {
+                client.DefaultRequestHeaders.Add("X-Session-Pin", PhonePin.Trim());
+            }
+
+            var url = string.IsNullOrWhiteSpace(PhonePin)
+                ? $"http://{PhoneIp}:{PhonePort}/status"
+                : $"http://{PhoneIp}:{PhonePort}/status?pin={PhonePin.Trim()}";
+
+            var response = await client.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
-                PhoneStatusText = $"Bağlantı Başarılı! Telefon kamerası aktif (HTTP {response.StatusCode})";
+                var content = await response.Content.ReadAsStringAsync();
+                PhoneStatusText = $"Bağlantı Başarılı! Telefon kamerası aktif (HTTP {response.StatusCode})\n{content}";
                 StatusMessage = "Telefondan canlı yayın hazır.";
             }
             else
             {
-                PhoneStatusText = $"Telefondan yanıt alındı fakat durum kodu: {response.StatusCode}";
+                PhoneStatusText = $"Telefondan yanıt alındı fakat durum kodu: {response.StatusCode} (PIN kodunu kontrol ediniz)";
             }
         }
         catch (Exception ex)
         {
-            PhoneStatusText = $"Bağlantı kurulamadı: {ex.Message} (Telefon ve bu cihaz aynı Wi-Fi ağında olmalıdır)";
+            PhoneStatusText = $"Bağlantı kurulamadı: {ex.Message}\n(Telefon ekranında 'Sunucuyu Başlat' butonuna basıldığından ve Port'un 8088 olduğundan emin olunuz)";
             StatusMessage = "Telefon bağlantı testi başarısız.";
         }
         finally
