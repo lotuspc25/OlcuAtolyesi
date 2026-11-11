@@ -14,25 +14,82 @@ using OlcuAtolyesi.Core.Services;
 
 namespace OlcuAtolyesi.Desktop.ViewModels;
 
+public sealed class DesktopNavMenuItem : ObservableObject
+{
+    private bool _isSelected;
+    public ModuleDescriptor Descriptor { get; }
+    public ModuleId Id => Descriptor.Id;
+    public string Title => Descriptor.Title;
+    public string IconGlyph => Descriptor.IconGlyph;
+    public string StateBadge => Descriptor.State == ModuleImplementationState.Planned ? "Planlandı" : $"{VersionInfo.DisplayVersion} (Aktif)";
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
+
+    public RelayCommand SelectCommand { get; }
+
+    public DesktopNavMenuItem(ModuleDescriptor descriptor, Action<ModuleId> selectAction)
+    {
+        Descriptor = descriptor;
+        SelectCommand = new RelayCommand(() => selectAction(descriptor.Id));
+    }
+}
+
+public sealed class DashboardModuleCardItem
+{
+    public ModuleId Id { get; }
+    public string Title { get; }
+    public string IconGlyph { get; }
+    public string StateBadge { get; }
+    public string ShortSummary { get; }
+    public string TargetVersion { get; }
+    public RelayCommand OpenCommand { get; }
+
+    public DashboardModuleCardItem(ModuleDescriptor descriptor, Action<ModuleId> openAction)
+    {
+        Id = descriptor.Id;
+        Title = descriptor.Title;
+        IconGlyph = descriptor.IconGlyph;
+        StateBadge = descriptor.State == ModuleImplementationState.Planned ? "Planlandı" : $"{VersionInfo.DisplayVersion} (Aktif)";
+        ShortSummary = descriptor.ShortSummary;
+        TargetVersion = descriptor.TargetVersion;
+        OpenCommand = new RelayCommand(() => openAction(descriptor.Id));
+    }
+}
+
 public sealed class DesktopMainViewModel : ObservableObject
 {
     private readonly DesktopSettingsService _settingsService = new();
     private readonly DesktopProjectService _projectService = new();
     private readonly DxfExportService _dxfExportService = new();
+    private readonly ModuleCatalogService _catalogService = new();
 
-    private int _selectedTabIndex = 0;
+    private ModuleId _selectedModuleId = ModuleId.Dashboard;
+    private bool _isDiagnosticConsoleOpen = false;
     private string _statusMessage = "Hazır — Linux Debian x64 & Windows Uyumlu";
 
-    // Ölçüm Alanı Özellikleri
-    private double _r1X = 150, _r1Y = 350, _r2X = 650, _r2Y = 350;
-    private double _m1X = 200, _m1Y = 200, _m2X = 600, _m2Y = 200;
-    private double _knownReferenceLength = 85.60; // Kredi kartı genişliği (mm)
+    // Ölçüm Modülü (R1-R2 & M1-M2)
+    private double _r1X = 150, _r1Y = 320, _r2X = 550, _r2Y = 320;
+    private double _m1X = 150, _m1Y = 160, _m2X = 750, _m2Y = 160;
+    private double _knownReferenceLength = 85.60;
     private LengthUnit _selectedUnit = LengthUnit.Millimeter;
     private string _selectedReferenceObjectName = "Banka Kartı (85.60 mm)";
-    private string _calculatedResultText = "Hesaplanıyor...";
-    private double _scaleMmPerPixel;
+    private string _calculatedResultText = "128.40 mm (Ölçek: 0.2140 mm/px)";
+    private double _scaleMmPerPixel = 0.2140;
 
-    // Telefon Bağlantı Özellikleri
+    // Büyüteç ve Görüntü Filtreleri
+    private bool _isMagnifierEnabled = false;
+    private double _magnifierZoom = 2.0;
+    private int _filterBrightness = 0;
+    private int _filterContrast = 0;
+    private bool _filterGrayscale = false;
+    private bool _filterNegative = false;
+    private bool _filterEdgeDetection = false;
+
+    // Telefon Bağlantısı
     private string _phoneIp = "192.168.1.100";
     private int _phonePort = 8080;
     private string _phonePin = "123456";
@@ -45,8 +102,20 @@ public sealed class DesktopMainViewModel : ObservableObject
 
     public DesktopMainViewModel()
     {
+        // 9 Modül Menüsü
+        NavigationItems = new ObservableCollection<DesktopNavMenuItem>(
+            _catalogService.GetAllModules().Select(m => new DesktopNavMenuItem(m, NavigateTo)));
+
+        // Dashboard Kartları
+        DashboardCards = new ObservableCollection<DashboardModuleCardItem>(
+            _catalogService.GetAllModules()
+                .Where(m => m.Id != ModuleId.Dashboard)
+                .Select(m => new DashboardModuleCardItem(m, NavigateTo)));
+
         // Komutlar
-        SelectTabCommand = new RelayCommand<int>(i => SelectedTabIndex = i);
+        NavigateCommand = new RelayCommand<ModuleId>(NavigateTo);
+        ToggleDiagnosticConsoleCommand = new RelayCommand(() => IsDiagnosticConsoleOpen = !IsDiagnosticConsoleOpen);
+        ToggleThemeCommand = new RelayCommand(ToggleTheme);
         SetDemoCardPointsCommand = new RelayCommand(SetDemoCardPoints);
         SetDemoA4PointsCommand = new RelayCommand(SetDemoA4Points);
         ExportDxfCommand = new RelayCommand(ExportCurrentMeasurementDxf);
@@ -55,60 +124,152 @@ public sealed class DesktopMainViewModel : ObservableObject
         CreateProjectCommand = new RelayCommand(CreateProject);
         RefreshProjectsCommand = new RelayCommand(LoadProjects);
         ClearLogsCommand = new RelayCommand(ClearLogs);
+        ToggleMagnifierCommand = new RelayCommand(() => IsMagnifierEnabled = !IsMagnifierEnabled);
+        SetZoom2Command = new RelayCommand(() => MagnifierZoom = 2.0);
+        SetZoom4Command = new RelayCommand(() => MagnifierZoom = 4.0);
+        SetZoom8Command = new RelayCommand(() => MagnifierZoom = 8.0);
+        ResetFiltersCommand = new RelayCommand(ResetFilters);
 
-        // Başlangıç yüklemeleri
+        // Başlangıç verileri
         UpdateCalculatedMeasurements();
         LoadProjects();
         _ = ProbeAdbStatusAsync();
+        UpdateSelectionState();
 
         DiagnosticLogHub.Instance.Log(
             DiagnosticLevel.Info,
             "Desktop",
             "APP_START",
-            $"Ölçü Atölyesi Çapraz Masaüstü başlatıldı. İşletim Sistemi: {OsDescription}",
+            $"Ölçü Atölyesi Çapraz Masaüstü {VersionInfo.DisplayVersion} başlatıldı. OS: {OsDescription}",
             source: Core.Diagnostics.DiagnosticSource.PC);
 
         RefreshLogs();
     }
 
-    #region Sistem ve Ortam Bilgileri
-    public string AppTitle => $"Ölçü Atölyesi Çapraz Masaüstü {VersionInfo.DisplayVersion} (Linux & Windows)";
-    public string VersionText => VersionInfo.DisplayVersion;
+    #region Sistem ve Ortam Bilgisi
+    public string AppTitle => "Ölçü Atölyesi PC";
+    public string WindowTitle => $"Ölçü Atölyesi Çapraz Masaüstü {VersionInfo.DisplayVersion} (Linux & Windows)";
+    public string VersionText => $"{VersionInfo.DisplayVersion} • Çapraz Masaüstü";
+    public string PlatformVersionText => IsLinux ? "Linux (Debian) • .NET 10" : "Windows • .NET 10";
     public string OsDescription => RuntimeInformation.OSDescription;
     public string Architecture => RuntimeInformation.ProcessArchitecture.ToString();
     public string FrameworkDescription => RuntimeInformation.FrameworkDescription;
     public bool IsLinux => OperatingSystem.IsLinux();
     public bool IsWindows => OperatingSystem.IsWindows();
-    public string PlatformBadge => IsLinux ? "🐧 Linux (Debian Uyumlu)" : "🪟 Windows";
+    public string PlatformBadge => IsLinux ? "🐧 Linux (Debian Uyumlu)" : "🪟 Windows Masaüstü";
     public string MachineUser => $"{Environment.MachineName} / {Environment.UserName}";
+    public string CurrentThemeLabel => "Koyu Tema";
     #endregion
 
-    #region Navigasyon
-    public int SelectedTabIndex
+    #region Navigasyon ve Modül Yönetimi
+    public ObservableCollection<DesktopNavMenuItem> NavigationItems { get; }
+    public ObservableCollection<DashboardModuleCardItem> DashboardCards { get; }
+
+    public ModuleId SelectedModuleId
     {
-        get => _selectedTabIndex;
+        get => _selectedModuleId;
         set
         {
-            if (SetProperty(ref _selectedTabIndex, value))
+            if (SetProperty(ref _selectedModuleId, value))
             {
-                OnPropertyChanged(nameof(IsDashboardTab));
-                OnPropertyChanged(nameof(IsMeasureTab));
-                OnPropertyChanged(nameof(IsPhoneTab));
-                OnPropertyChanged(nameof(IsProjectsTab));
-                OnPropertyChanged(nameof(IsDiagnosticsTab));
-                OnPropertyChanged(nameof(IsSettingsTab));
+                UpdateSelectionState();
+                OnPropertyChanged(nameof(CurrentModuleTitle));
+                OnPropertyChanged(nameof(CurrentModuleSubtitle));
+                OnPropertyChanged(nameof(CurrentModuleStateBadge));
+                OnPropertyChanged(nameof(IsDashboard));
+                OnPropertyChanged(nameof(IsProjects));
+                OnPropertyChanged(nameof(IsPhoneConnection));
+                OnPropertyChanged(nameof(IsCameraCalibration));
+                OnPropertyChanged(nameof(IsPhotoMeasurement));
+                OnPropertyChanged(nameof(IsScreenCalibration));
+                OnPropertyChanged(nameof(IsCadExport));
+                OnPropertyChanged(nameof(IsPrint3D));
+                OnPropertyChanged(nameof(IsSettings));
+                OnPropertyChanged(nameof(IsHelp));
             }
         }
     }
 
-    public bool IsDashboardTab => SelectedTabIndex == 0;
-    public bool IsMeasureTab => SelectedTabIndex == 1;
-    public bool IsPhoneTab => SelectedTabIndex == 2;
-    public bool IsProjectsTab => SelectedTabIndex == 3;
-    public bool IsDiagnosticsTab => SelectedTabIndex == 4;
-    public bool IsSettingsTab => SelectedTabIndex == 5;
+    public bool IsDiagnosticConsoleOpen
+    {
+        get => _isDiagnosticConsoleOpen;
+        set => SetProperty(ref _isDiagnosticConsoleOpen, value);
+    }
 
-    public RelayCommand<int> SelectTabCommand { get; }
+    public bool IsDashboard => SelectedModuleId == ModuleId.Dashboard;
+    public bool IsProjects => SelectedModuleId == ModuleId.Projects;
+    public bool IsPhoneConnection => SelectedModuleId == ModuleId.PhoneConnection;
+    public bool IsCameraCalibration => SelectedModuleId == ModuleId.CameraCalibration;
+    public bool IsPhotoMeasurement => SelectedModuleId == ModuleId.PhotoMeasurement;
+    public bool IsCadExport => SelectedModuleId == ModuleId.CadExport;
+    public bool IsPrint3D => SelectedModuleId == ModuleId.Print3D;
+    public bool IsScreenCalibration => SelectedModuleId == (ModuleId)99; // Özel ID
+    public bool IsSettings => SelectedModuleId == ModuleId.Settings;
+    public bool IsHelp => SelectedModuleId == ModuleId.Help;
+
+    public string CurrentModuleTitle => SelectedModuleId switch
+    {
+        ModuleId.Dashboard => "1. Ana Panel (Genel Bakış)",
+        ModuleId.Projects => "2. Projeler (Kayıtlı Proje Yönetimi)",
+        ModuleId.PhoneConnection => "3. Telefon Bağlantısı (USB & Wi-Fi)",
+        ModuleId.CameraCalibration => "4. Kamera ve Kalibrasyon (Canlı Akış)",
+        ModuleId.PhotoMeasurement => "5. Fotoğraftan Ölçüm (Teknik Stüdyo)",
+        ModuleId.CadExport => "6. CAD İhracı (DXF / STEP / STL)",
+        ModuleId.Print3D => "7. 3B Baskı Hazırlığı",
+        ModuleId.Settings => "8. Ayarlar & Yapılandırma",
+        ModuleId.Help => "9. Yardım & Kullanım Kılavuzu",
+        _ => "Ölçü Atölyesi Çapraz Masaüstü"
+    };
+
+    public string CurrentModuleSubtitle => SelectedModuleId switch
+    {
+        ModuleId.Dashboard => "Masaüstü çalışma alanının genel durumu, modül hazırlık seviyeleri ve açık kaynak entegrasyonu.",
+        ModuleId.Projects => "Kalıcı proje arşivi, JSON/fotoğraf atomik depolama ve mobil paket uyumluluğu.",
+        ModuleId.PhoneConnection => "USB ADB köprüsü ve yerel ağ üzerinden Android telefon algılama ve denetleme.",
+        ModuleId.CameraCalibration => "Wi-Fi MJPEG kamera yayını, PIN eşleme, anlık yüksek çözünürlüklü çekim.",
+        ModuleId.PhotoMeasurement => "A ve B cetvelleri, R1-R2 referans, M1-M2 ölçüm, büyüteç, filtreler ve DXF ihracı.",
+        ModuleId.CadExport => "2B DXF R12 ASCII, katmanlar, milimetrik CAD dönüşümü ve vektörel dışa aktarma.",
+        ModuleId.Print3D => "Ölçülen modellerin 3B baskıya hazırlanması ve dilimleyici CLI entegrasyonu.",
+        ModuleId.Settings => "Ölçü birimleri, tema seçimi ve yerel çalışma dizini yapılandırması.",
+        ModuleId.Help => "Sık sorulan sorular, klavye kısayolları ve adım adım ölçüm rehberi.",
+        _ => ""
+    };
+
+    public string CurrentModuleStateBadge => SelectedModuleId switch
+    {
+        ModuleId.Dashboard => $"{VersionInfo.DisplayVersion} (Aktif)",
+        ModuleId.Projects => $"{VersionInfo.DisplayVersion} (Aktif)",
+        ModuleId.PhoneConnection => "USB Aktif / Wi-Fi Hazır",
+        ModuleId.CameraCalibration => "Wi-Fi Aktif / scrcpy Hazır",
+        ModuleId.PhotoMeasurement => $"{VersionInfo.DisplayVersion} (Aktif)",
+        ModuleId.CadExport => $"{VersionInfo.DisplayVersion} (Aktif)",
+        ModuleId.Print3D => "Temeli Hazır",
+        ModuleId.Settings => $"{VersionInfo.DisplayVersion} (Aktif)",
+        ModuleId.Help => $"{VersionInfo.DisplayVersion} (Aktif)",
+        _ => "v0.6.9"
+    };
+
+    public RelayCommand<ModuleId> NavigateCommand { get; }
+    public RelayCommand ToggleDiagnosticConsoleCommand { get; }
+    public RelayCommand ToggleThemeCommand { get; }
+
+    public void NavigateTo(ModuleId id)
+    {
+        SelectedModuleId = id;
+    }
+
+    private void UpdateSelectionState()
+    {
+        foreach (var item in NavigationItems)
+        {
+            item.IsSelected = item.Id == SelectedModuleId;
+        }
+    }
+
+    private void ToggleTheme()
+    {
+        StatusMessage = "Koyu tema varsayılan olarak devrededir.";
+    }
     #endregion
 
     #region Durum Çubuğu
@@ -119,7 +280,7 @@ public sealed class DesktopMainViewModel : ObservableObject
     }
     #endregion
 
-    #region Ölçüm Modülü (R1-R2 & M1-M2)
+    #region Fotoğraftan Ölçüm Modülü (R1-R2 / M1-M2 / Büyüteç / Filtreler)
     public double R1X { get => _r1X; set { if (SetProperty(ref _r1X, value)) UpdateCalculatedMeasurements(); } }
     public double R1Y { get => _r1Y; set { if (SetProperty(ref _r1Y, value)) UpdateCalculatedMeasurements(); } }
     public double R2X { get => _r2X; set { if (SetProperty(ref _r2X, value)) UpdateCalculatedMeasurements(); } }
@@ -152,6 +313,7 @@ public sealed class DesktopMainViewModel : ObservableObject
                 if (value.Contains("Banka Kartı")) KnownReferenceLength = 85.60;
                 else if (value.Contains("A4")) KnownReferenceLength = 210.0;
                 else if (value.Contains("1 TL")) KnownReferenceLength = 26.15;
+                else if (value.Contains("50 Kuruş")) KnownReferenceLength = 23.85;
             }
         }
     }
@@ -168,26 +330,83 @@ public sealed class DesktopMainViewModel : ObservableObject
         private set => SetProperty(ref _scaleMmPerPixel, value);
     }
 
+    public bool IsMagnifierEnabled
+    {
+        get => _isMagnifierEnabled;
+        set => SetProperty(ref _isMagnifierEnabled, value);
+    }
+
+    public double MagnifierZoom
+    {
+        get => _magnifierZoom;
+        set => SetProperty(ref _magnifierZoom, value);
+    }
+
+    public int FilterBrightness
+    {
+        get => _filterBrightness;
+        set => SetProperty(ref _filterBrightness, value);
+    }
+
+    public int FilterContrast
+    {
+        get => _filterContrast;
+        set => SetProperty(ref _filterContrast, value);
+    }
+
+    public bool FilterGrayscale
+    {
+        get => _filterGrayscale;
+        set => SetProperty(ref _filterGrayscale, value);
+    }
+
+    public bool FilterNegative
+    {
+        get => _filterNegative;
+        set => SetProperty(ref _filterNegative, value);
+    }
+
+    public bool FilterEdgeDetection
+    {
+        get => _filterEdgeDetection;
+        set => SetProperty(ref _filterEdgeDetection, value);
+    }
+
     public RelayCommand SetDemoCardPointsCommand { get; }
     public RelayCommand SetDemoA4PointsCommand { get; }
     public RelayCommand ExportDxfCommand { get; }
+    public RelayCommand ToggleMagnifierCommand { get; }
+    public RelayCommand SetZoom2Command { get; }
+    public RelayCommand SetZoom4Command { get; }
+    public RelayCommand SetZoom8Command { get; }
+    public RelayCommand ResetFiltersCommand { get; }
 
     private void SetDemoCardPoints()
     {
         SelectedReferenceObjectName = "Banka Kartı (85.60 mm)";
         KnownReferenceLength = 85.60;
-        R1X = 150; R1Y = 350; R2X = 550; R2Y = 350; // 400 piksel
-        M1X = 150; M1Y = 180; M2X = 750; M2Y = 180; // 600 piksel -> 128.40 mm
-        StatusMessage = "Demo banka kartı ve parça ölçüm koordinatları yüklendi.";
+        R1X = 150; R1Y = 320; R2X = 550; R2Y = 320;
+        M1X = 150; M1Y = 160; M2X = 750; M2Y = 160;
+        StatusMessage = "Demo banka kartı (85.6 mm) koordinatları yüklendi.";
     }
 
     private void SetDemoA4Points()
     {
         SelectedReferenceObjectName = "A4 Kağıt (210.00 mm)";
         KnownReferenceLength = 210.0;
-        R1X = 100; R1Y = 400; R2X = 800; R2Y = 400; // 700 piksel
-        M1X = 200; M1Y = 220; M2X = 550; M2Y = 220; // 350 piksel -> 105.00 mm
-        StatusMessage = "Demo A4 referans koordinatları yüklendi.";
+        R1X = 100; R1Y = 360; R2X = 800; R2Y = 360;
+        M1X = 200; M1Y = 180; M2X = 550; M2Y = 180;
+        StatusMessage = "Demo A4 kağıt (210 mm) koordinatları yüklendi.";
+    }
+
+    private void ResetFilters()
+    {
+        FilterBrightness = 0;
+        FilterContrast = 0;
+        FilterGrayscale = false;
+        FilterNegative = false;
+        FilterEdgeDetection = false;
+        StatusMessage = "Görüntü filtreleri sıfırlandı.";
     }
 
     private void UpdateCalculatedMeasurements()
@@ -229,13 +448,13 @@ public sealed class DesktopMainViewModel : ObservableObject
                 Guid.NewGuid(),
                 "Oto-Olcu-Dxf",
                 ProjectType.PhotoMeasurement,
-                "Çapraz masaüstü otomatik DXF dışa aktarma",
+                "Çapraz masaüstü otomatik DXF ihracı",
                 null,
                 DateTimeOffset.UtcNow,
                 DateTimeOffset.UtcNow,
                 false,
                 null,
-                new ImageSize(1000, 800),
+                new ImageSize(1200, 800),
                 refSegment,
                 refLength,
                 measSegment,
@@ -324,7 +543,7 @@ public sealed class DesktopMainViewModel : ObservableObject
             }
 
             PhoneStatusText = IsLinux
-                ? "ADB aracı kurulu değil. Debian terminalinde 'sudo apt install adb' kurabilirsiniz."
+                ? "ADB aracı kurulu değil. İsteğe bağlı olarak 'sudo apt install adb' kurabilirsiniz."
                 : "ADB bulunamadı. Android SDK platform-tools yolunu kontrol ediniz.";
         }
         catch (Exception ex)
@@ -383,7 +602,7 @@ public sealed class DesktopMainViewModel : ObservableObject
     }
     #endregion
 
-    #region Teşhis ve Sistem Günlükleri
+    #region Teşhis Konsolu
     public ObservableCollection<DiagnosticLogEntry> Logs { get; } = new();
     public RelayCommand ClearLogsCommand { get; }
 
