@@ -2,6 +2,7 @@ using System.Windows.Input;
 using OlcuAtolyesi.Core.Models;
 using OlcuAtolyesi.Core.Mvvm;
 using OlcuAtolyesi.Core.Services;
+using OlcuAtolyesi.PC.Resources.Strings;
 
 namespace OlcuAtolyesi.PC.ViewModels;
 
@@ -63,6 +64,10 @@ public sealed class DashboardViewModel : PageViewModelBase
     }
 
     public IReadOnlyList<DashboardModuleCardItem> ModuleCards { get; }
+
+    public string WorkspaceHeading => $"Ölçü Atölyesi PC — Masaüstü Çalışma Alanı ({PcText.DisplayVersion})";
+
+    public string DisplayVersion => PcText.DisplayVersion;
 
     public int ActiveModuleCount { get; }
 

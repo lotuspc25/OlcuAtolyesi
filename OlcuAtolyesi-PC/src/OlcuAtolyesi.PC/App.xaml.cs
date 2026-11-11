@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Threading;
 using OlcuAtolyesi.Core.Diagnostics;
+using OlcuAtolyesi.PC.Resources.Strings;
 using OlcuAtolyesi.PC.Themes;
 using OlcuAtolyesi.PC.ViewModels;
 
@@ -51,7 +52,7 @@ public partial class App : Application
             DiagnosticLevel.Event,
             "AppLifecycle",
             "APP_STARTUP",
-            "Ölçü Atölyesi PC v0.5.0.5 başarıyla başlatıldı.");
+            $"Ölçü Atölyesi PC {PcText.DisplayVersion} başarıyla başlatıldı.");
 
         var viewModel = new MainWindowViewModel();
         ThemeManager.ApplyTheme(Resources, viewModel.Settings.Theme);

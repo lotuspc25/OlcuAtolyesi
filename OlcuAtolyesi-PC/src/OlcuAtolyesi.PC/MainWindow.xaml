@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:OlcuAtolyesi.PC.ViewModels"
         xmlns:ctl="clr-namespace:OlcuAtolyesi.PC.Controls"
-        Title="Ölçü Atölyesi PC — v0.5.0.5"
+        Title="{Binding WindowTitle, FallbackValue='Ölçü Atölyesi PC'}"
         Icon="pack://application:,,,/OlcuAtolyesi.PC;component/Resources/app.ico"
         Width="1180"
         Height="760"
@@ -39,7 +39,7 @@
             <StackPanel Margin="0,0,0,20">
                 <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,14" Background="{DynamicResource AccentSubtleBrush}">
                     <StackPanel>
-                        <TextBlock Text="Ölçü Atölyesi PC — Masaüstü Çalışma Alanı (v0.5.0.5)"
+                        <TextBlock Text="{Binding WorkspaceHeading}"
                                    FontSize="17" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}" />
                         <TextBlock Text="{Binding DetailedScope}"
                                    Margin="0,6,0,0" TextWrapping="Wrap" Foreground="{DynamicResource SecondaryTextBrush}" />
@@ -1261,7 +1261,7 @@
                         <TextBlock Text="{Binding AppTitle}" FontSize="17" FontWeight="Bold"
                                    VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" />
                     </StackPanel>
-                    <TextBlock Text="v0.5.0.5 • Windows Masaüstü" FontSize="11.5"
+                    <TextBlock Text="{Binding PlatformVersionText}" FontSize="11.5"
                                Foreground="{DynamicResource AccentBrush}" Margin="34,0,0,0" />
                 </StackPanel>
 

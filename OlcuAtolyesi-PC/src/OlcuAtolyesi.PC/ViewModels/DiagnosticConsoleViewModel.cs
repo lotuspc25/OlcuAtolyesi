@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using OlcuAtolyesi.Core.Diagnostics;
 using OlcuAtolyesi.Core.Mvvm;
+using OlcuAtolyesi.PC.Resources.Strings;
 
 namespace OlcuAtolyesi.PC.ViewModels;
 
@@ -142,6 +143,10 @@ public sealed class DiagnosticConsoleViewModel : ObservableObject, IDisposable
             }
         }
     }
+
+    public string WindowTitle => $"Ölçü Atölyesi — Merkezi Tanılama Konsolu ({PcText.DisplayVersion})";
+
+    public string HeaderSubtitle => $"PC ve Android cihaz olayları, PIN korumalı log aktarımı, döngüsel arşivleme ve hata tanılaması ({PcText.DisplayVersion})";
 
     public bool IsAutoScrollEnabled
     {

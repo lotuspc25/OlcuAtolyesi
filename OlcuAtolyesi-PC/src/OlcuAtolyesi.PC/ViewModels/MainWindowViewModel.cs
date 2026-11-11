@@ -27,7 +27,7 @@ public sealed class NavigationMenuItem : ObservableObject
 
     public string IconGlyph => Descriptor.IconGlyph;
 
-    public string StateBadge => Descriptor.State == ModuleImplementationState.Planned ? "Planlandı" : "v0.5.0.5";
+    public string StateBadge => Descriptor.State == ModuleImplementationState.Planned ? "Planlandı" : PcText.DisplayVersion;
 
     public bool IsPlanned => Descriptor.State == ModuleImplementationState.Planned;
 
@@ -95,6 +95,12 @@ public sealed class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     public string AppTitle => PcText.AppTitle;
+
+    public string WindowTitle => PcText.WindowTitle;
+
+    public string DisplayVersion => PcText.DisplayVersion;
+
+    public string PlatformVersionText => $"{PcText.DisplayVersion} • Windows Masaüstü";
 
     public string VersionText => PcText.Version;
 
@@ -296,7 +302,7 @@ public sealed class MainWindowViewModel : ObservableObject, IDisposable
                 catalog.GetModule(ModuleId.CadExport),
                 "2B DXF için ezdxf (MIT) şema referanslı yerel C# yazıcı; 3B STEP ve STL katı modelleme için Open CASCADE / OCCT (LGPL-2.1) dinamik kütüphanesi ve FreeCAD başsız (freecadcmd) köprüsü.",
                 [
-                    new PlannedActionItem("2B DXF Dosyası Oluştur • Planlandı", "Ölçülen dış kontur ve delikleri katmanlı R2000 DXF olarak kaydeder (v0.6.0)."),
+                    new PlannedActionItem("2B DXF Dosyası Oluştur • Tamamlandı (v0.6.0)", "Ölçülen referans ve mesafe geometrisini standart AutoCAD R12 ASCII DXF ($INSUNITS=4 mm) formatında dışa aktarır (v0.6.0)."),
                     new PlannedActionItem("3B STL (Ekstrüzyon) Oluştur • Planlandı", "2B profili girilen et kalınlığıyla 3B baskıya uygun su geçirmez STL ağa dönüştürür (v0.6.0)."),
                     new PlannedActionItem("Analitik STEP (AP214) Oluştur • Planlandı", "Open CASCADE çekirdeği ile CAD yazılımları için gerçek B-Rep katı model üretir (v0.8.0).")
                 ]),

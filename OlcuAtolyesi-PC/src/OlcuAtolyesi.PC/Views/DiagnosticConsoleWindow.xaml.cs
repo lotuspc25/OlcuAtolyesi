@@ -12,6 +12,7 @@ public partial class DiagnosticConsoleWindow : Window
         InitializeComponent();
         _viewModel = viewModel ?? new DiagnosticConsoleViewModel();
         DataContext = _viewModel;
+        Title = _viewModel.WindowTitle;
 
         _viewModel.RequestScrollToEnd += OnRequestScrollToEnd;
         Closed += OnClosed;

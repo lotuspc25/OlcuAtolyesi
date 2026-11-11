@@ -16,9 +16,9 @@ public sealed class ModuleCatalogService
                 "Ana Panel",
                 "⊞",
                 "Masaüstü çalışma alanının genel durumu, modül hazırlık seviyeleri ve hızlı geçiş kartları.",
-                "Ölçü Atölyesi PC v0.1.0 sürümünde tüm masaüstü modüllerinin mevcut durumlarını, ortak geometri motorunu ve açık kaynak entegrasyon yol haritasını tek ekranda özetler.",
+                $"Ölçü Atölyesi PC {VersionInfo.DisplayVersion} sürümünde tüm masaüstü modüllerinin mevcut durumlarını, ortak geometri motorunu ve açık kaynak entegrasyon yol haritasını tek ekranda özetler.",
                 ModuleImplementationState.Active,
-                "v0.1.0 (Aktif)",
+                $"{VersionInfo.DisplayVersion} (Aktif)",
                 [
                     "9 modüllü sol navigasyon menüsü ve hızlı modül geçişi",
                     "Canlı modül durum rozetleri (Etkin, Temel Hazır, Planlandı)",
@@ -120,14 +120,14 @@ public sealed class ModuleCatalogService
                 "🧊",
                 "Ölçülen 2B geometriden DXF kesim dosyası ve ekstrüde edilmiş 3B STEP / STL katı model üretimi.",
                 "Fotoğraftan çıkarılan dış kontur, delikler ve ölçülendirmelerden lazer/CNC kesim için katmanlı DXF, 3B CAD yazılımları için analitik STEP (AP214) ve 3B baskı için su geçirmez STL üretir.",
-                ModuleImplementationState.Planned,
-                "v0.6.0 DXF & STL / v0.8.0 STEP (Planlandı)",
+                ModuleImplementationState.Active,
+                "v0.6.0 (2B DXF Aktif / STEP & STL Planlandı)",
                 [
+                    "2B DXF (R12 ASCII, AC1009) ihracı: Referans ve ölçüm geometrisi mm cinsinden ($INSUNITS=4) dışa aktarılır",
                     "DXF katman standardı (DIS_KONTUR, DELIKLER, REFERANS, OLCULER) tanımlandı",
                     "Açık kaynak CAD çekirdeği lisans ve entegrasyon mimarisi tamamlandı"
                 ],
                 [
-                    "2B vektör profillerinden standart R2000 ASCII DXF dışa aktarma (Planlandı)",
                     "2B profil + et kalınlığı parametresiyle 3B prizmatik STL ağ üretimi (Planlandı)",
                     "Open CASCADE (OCCT) ve FreeCAD köprüsü ile analitik STEP katı model üretimi (Planlandı)",
                     "Çok açılı fotoğraflardan AliceVision / Meshroom ile 3B fotogrametri ağı üretimi (Planlandı)"

@@ -15,6 +15,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = viewModel;
         ViewModel = viewModel;
+        Title = viewModel.WindowTitle;
         Closed += (_, _) => ViewModel.Dispose();
     }
 

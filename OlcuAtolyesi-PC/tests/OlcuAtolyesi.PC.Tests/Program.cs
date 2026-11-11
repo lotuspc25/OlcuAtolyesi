@@ -16,6 +16,7 @@ using OlcuAtolyesi.Core.Services;
 using OlcuAtolyesi.PC;
 using OlcuAtolyesi.PC.Controls;
 using OlcuAtolyesi.PC.Media;
+using OlcuAtolyesi.PC.Resources.Strings;
 using OlcuAtolyesi.PC.Services;
 using OlcuAtolyesi.PC.Themes;
 using OlcuAtolyesi.PC.ViewModels;
@@ -225,7 +226,7 @@ static void CheckNavigationWorkflow()
         Equal(8, dashboard.ModuleCards.Count);
         dashboard.ModuleCards.First(c => c.Id == ModuleId.CadExport).OpenCommand.Execute(null);
         Equal(ModuleId.CadExport, vm.CurrentPage.Id);
-        True(vm.CurrentPage.IsPlanned);
+        True(vm.CurrentPage.IsActive);
     }
     finally
     {
@@ -292,7 +293,7 @@ static void CheckWpfWindowAndThemeStartup()
                 var mainVm = new MainWindowViewModel(settings, new ModuleCatalogService());
                 var window = new MainWindow(mainVm);
 
-                Equal("Ölçü Atölyesi PC — v0.5.0.5", window.Title);
+                Equal(PcText.WindowTitle, window.Title);
 
                 var root = (FrameworkElement)window.Content;
 
@@ -670,7 +671,7 @@ static void CheckDiagnosticConsoleWindowStaStartup()
                 var window = new DiagnosticConsoleWindow(vm);
 
                 True(window.Title.Contains("Merkezi Tanılama Konsolu"), "Pencere başlığı doğru olmalıdır.");
-                True(window.Title.Contains("v0.5.0.5"), "Pencere başlığı v0.5.0.5 içermelidir.");
+                True(window.Title.Contains(PcText.DisplayVersion), $"Pencere başlığı {PcText.DisplayVersion} içermelidir.");
 
                 var root = (FrameworkElement)window.Content;
                 // 1366x768 ve 1920x1080 ekran ölçüm/düzen testi

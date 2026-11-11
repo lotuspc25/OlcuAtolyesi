@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:OlcuAtolyesi.PC.ViewModels"
         xmlns:diag="clr-namespace:OlcuAtolyesi.Core.Diagnostics;assembly=OlcuAtolyesi.Core"
-        Title="Ölçü Atölyesi — Merkezi Tanılama Konsolu (v0.5.0.5)"
+        Title="{Binding WindowTitle, FallbackValue='Ölçü Atölyesi — Merkezi Tanılama Konsolu'}"
         Icon="pack://application:,,,/OlcuAtolyesi.PC;component/Resources/app.ico"
         Width="1180"
         Height="720"
@@ -71,7 +71,7 @@
                                    FontSize="16" FontWeight="Bold" Foreground="{DynamicResource PrimaryTextBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
-                    <TextBlock Text="PC ve Android cihaz olayları, PIN korumalı log aktarımı, döngüsel arşivleme ve hata tanılaması (v0.5.0.5)"
+                    <TextBlock Text="{Binding HeaderSubtitle, FallbackValue='PC ve Android cihaz olayları, PIN korumalı log aktarımı, döngüsel arşivleme ve hata tanılaması'}"
                                FontSize="11.5" Foreground="{DynamicResource MutedTextBrush}" Margin="26,2,0,0" />
                 </StackPanel>
             </DockPanel>
